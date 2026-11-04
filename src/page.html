@@ -1,0 +1,842 @@
+<title>Dami 加密日報</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky masthead · left rail = report index · right = desk (stance band → KPI tiles → level ladder + trends → checks/stocks → full report) */
+:root{
+  --bg:#eef1f5; --surface:#ffffff; --sunk:#f5f7fa; --fg:#121a24; --muted:#5b6878; --faint:#8a96a5; --line:#dbe1e8;
+  --accent:#2457c5; --accent-soft:#e3ebfb;
+  --up:#d1343e; --down:#14935a; --up-soft:#fbe6e7; --down-soft:#dff3ea;
+  --warn:#b7700b; --warn-soft:#fbefdb;
+  --am:#b8650a; --am-bg:#fdf1e2; --pm:#4b3fb3; --pm-bg:#ecebfb;
+  --f-body:"Noto Sans TC",system-ui,-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0c1118; --surface:#141b25; --sunk:#10161f; --fg:#e6ebf2; --muted:#9aa7b7; --faint:#6c7888; --line:#253042;
+  --accent:#7aa7f5; --accent-soft:#1d2a44;
+  --up:#ff6b72; --down:#3fd18b; --up-soft:#3a1d22; --down-soft:#15332a;
+  --warn:#f2b24f; --warn-soft:#3a2c14;
+  --am:#f0a64a; --am-bg:#33261a; --pm:#a59bf5; --pm-bg:#252246; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#0c1118; --surface:#141b25; --sunk:#10161f; --fg:#e6ebf2; --muted:#9aa7b7; --faint:#6c7888; --line:#253042;
+  --accent:#7aa7f5; --accent-soft:#1d2a44;
+  --up:#ff6b72; --down:#3fd18b; --up-soft:#3a1d22; --down-soft:#15332a;
+  --warn:#f2b24f; --warn-soft:#3a2c14;
+  --am:#f0a64a; --am-bg:#33261a; --pm:#a59bf5; --pm-bg:#252246; color-scheme:dark }
+/* International convention: green up, red down */
+body{--up-x:var(--down);--down-x:var(--up);--up-xs:var(--down-soft);--down-xs:var(--up-soft)}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.65}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.mast{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+header.mast .wrap{display:flex;align-items:center;gap:12px 18px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{width:28px;height:28px;border-radius:7px;background:var(--fg);display:grid;place-items:center}
+.logo svg{display:block}
+.brand h1{margin:0;font-size:17px;font-weight:900;letter-spacing:.03em}
+.brand .sub{color:var(--muted);font-size:12px}
+.tools{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--sunk)}
+.seg button{border:0;background:transparent;color:var(--muted);font-size:13px;padding:3px 12px;border-radius:999px}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgb(0 0 0 / .12);font-weight:500}
+
+main .wrap{display:grid;grid-template-columns:200px minmax(0,1fr);gap:24px;padding-block:20px 48px}
+@media (max-width:860px){main .wrap{grid-template-columns:minmax(0,1fr)}}
+nav.idx{align-self:start;position:sticky;top:calc(env(safe-area-inset-top,0px) + 70px)}
+@media (max-width:860px){nav.idx{position:static;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}}
+.idx-title{font-size:11px;letter-spacing:.12em;color:var(--faint);margin:0 0 8px 10px}
+@media (max-width:860px){.idx-title{display:none}}
+.day{margin-bottom:12px}
+@media (max-width:860px){.day{margin:0;flex:0 0 auto;display:flex;gap:4px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:4px 6px}}
+.day-label{font-family:var(--f-num);font-size:12px;color:var(--muted);margin:0 0 2px 10px}
+@media (max-width:860px){.day-label{margin:0 4px}}
+.idx a{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:8px;color:var(--fg);text-decoration:none;font-size:13px}
+.idx a:hover{background:var(--surface)}
+.idx a[aria-current="true"]{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;flex:none}
+.chip{font-size:11px;font-weight:700;padding:1px 8px;border-radius:999px;letter-spacing:.04em;white-space:nowrap}
+.chip.morning,.dot.morning{color:var(--am);background:var(--am-bg)}
+.chip.evening,.dot.evening{color:var(--pm);background:var(--pm-bg)}
+.dot.morning{background:var(--am)} .dot.evening{background:var(--pm)}
+
+.desk{min-width:0;display:grid;gap:16px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 18px;min-width:0}
+.panel h2{margin:0 0 12px;font-size:13px;font-weight:700;letter-spacing:.08em;color:var(--muted);display:flex;align-items:center;gap:8px;justify-content:space-between}
+.panel h2 small{font-weight:400;letter-spacing:0;color:var(--faint);font-size:12px}
+
+/* Stance band */
+.stance{display:grid;grid-template-columns:auto minmax(0,1fr);gap:18px;align-items:center;padding:18px 20px}
+@media (max-width:620px){.stance{grid-template-columns:minmax(0,1fr)}}
+.verdict{display:grid;place-items:center;min-width:132px;padding:12px 16px;border-radius:10px;background:var(--sunk);border:1px solid var(--line)}
+.verdict .lbl{font-size:11px;letter-spacing:.14em;color:var(--muted)}
+.verdict .v{font-size:30px;font-weight:900;line-height:1.2}
+.verdict.long .v{color:var(--up-x)} .verdict.short .v{color:var(--down-x)} .verdict.wait .v{color:var(--warn)} .verdict.reduce .v{color:var(--down-x)}
+.stance .meta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:13px;margin-bottom:6px}
+.stance .lede{margin:0;font-size:16px;font-weight:500;line-height:1.6;text-wrap:pretty}
+.qqq{font-size:12px;font-weight:700;padding:1px 8px;border-radius:999px;border:1px solid currentColor}
+.qqq.on{color:var(--up-x)} .qqq.off{color:var(--down-x)}
+
+/* KPI tiles */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px;min-width:0}
+.kpi .k{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:22px;font-weight:600}
+.kpi .s{font-size:12px;color:var(--faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kpi svg{display:block;width:100%;height:auto;margin-top:4px}
+.chg.up{color:var(--up-x)} .chg.down{color:var(--down-x)} .chg.flat{color:var(--muted)}
+.na{color:var(--faint);font-size:16px;font-weight:400}
+
+.grid2{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:16px;align-items:start}
+@media (max-width:1000px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.chart{width:100%;height:auto;display:block;overflow:visible}
+.chart text{fill:var(--muted);font-family:var(--f-num);font-size:11px}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-top:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.sc-table{width:100%;min-width:620px;border-collapse:collapse;font-size:13px;margin-top:10px}
+.sc-table td:nth-child(2){min-width:170px}
+.sc-table th,.sc-table td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+.sc-table th{color:var(--muted);font-weight:500;white-space:nowrap}
+.sc-table td.num{text-align:right;white-space:nowrap}
+.tblwrap{overflow-x:auto}
+.side{font-weight:700;white-space:nowrap}
+.side.long{color:var(--up-x)} .side.short{color:var(--down-x)}
+
+.trends{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.trend h3{margin:0 0 4px;font-size:13px;font-weight:500;color:var(--muted)}
+.empty-note{color:var(--faint);font-size:13px;padding:18px 0;text-align:center}
+
+.hb{display:grid;gap:10px}
+.hb-row{display:grid;grid-template-columns:52px minmax(0,1fr) 68px;align-items:center;column-gap:10px;row-gap:2px}
+.hb-sym{font-weight:600;font-size:13px}
+.hb-track{position:relative;height:14px;background:var(--sunk);border-radius:3px}
+.hb-zero{position:absolute;top:-3px;bottom:-3px;width:1px;background:var(--line)}
+.hb-bar{position:absolute;top:0;bottom:0;border-radius:3px}
+.hb-bar.up{background:var(--up-x)} .hb-bar.down{background:var(--down-x)}
+.hb-val{text-align:right;font-size:13px;font-weight:600}
+.hb-note{grid-column:2 / 4;font-size:11px;color:var(--faint);line-height:1.4;min-width:0;overflow-wrap:anywhere}
+.checks{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.checks li{display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:6px 0;border-bottom:1px dashed var(--line)}
+.checks li:last-child{border-bottom:0}
+.st{flex:none;font-size:11px;font-weight:700;padding:2px 8px;border-radius:6px;min-width:52px;text-align:center}
+.st.ok{background:var(--down-soft);color:var(--down)} .st.no{background:var(--up-soft);color:var(--up)} .st.wait{background:var(--warn-soft);color:var(--warn)}
+.macro{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.macro div{background:var(--sunk);border-radius:8px;padding:8px 10px}
+.macro .k{font-size:11px;color:var(--muted);display:block}
+.macro .v{font-size:17px;font-weight:600}
+
+/* Report body */
+details.report>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px}
+details.report>summary::-webkit-details-marker{display:none}
+details.report>summary h2{margin:0}
+details.report>summary .tog{font-size:12px;color:var(--accent)}
+.md{max-width:76ch;margin-top:8px}
+.md h1{font-size:22px;line-height:1.35;margin:0 0 8px;text-wrap:balance}
+.md h2{font-size:17px;margin:26px 0 8px;padding-top:12px;border-top:1px solid var(--line);color:var(--fg);letter-spacing:0;display:block}
+.md h3{font-size:15px;margin:18px 0 6px}
+.md p,.md li{margin:5px 0}
+.md ul,.md ol{padding-left:1.3em}
+.md a{color:var(--accent);word-break:break-word}
+.md blockquote{margin:12px 0;padding:8px 14px;background:var(--sunk);border-left:3px solid var(--line);border-radius:0 6px 6px 0;color:var(--muted)}
+.md blockquote p{margin:0}
+.md code{font-family:var(--f-num);font-size:13px;background:var(--sunk);padding:1px 5px;border-radius:4px}
+.md .tbl{overflow-x:auto;margin:10px 0}
+.md table{border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;min-width:100%}
+.md th,.md td{border-bottom:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+.md th{color:var(--muted);white-space:nowrap;font-weight:500}
+.note{font-size:12px;color:var(--faint);margin-top:4px}
+.empty{color:var(--muted);text-align:center;padding:56px 16px}
+.empty h2{color:var(--fg);font-size:18px;margin:0 0 8px;letter-spacing:0;display:block}
+/* reading + kline + causal */
+.panel h2{flex-wrap:wrap}
+.gbtn{border:1px solid var(--line);background:var(--sunk);color:var(--accent);font-size:12px;font-weight:500;letter-spacing:0;padding:2px 10px;border-radius:999px}
+.gbtn[aria-expanded="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.guide{background:var(--accent-soft);border-radius:8px;padding:10px 14px;margin:-4px 0 12px;font-size:13px;line-height:1.7}
+.guide ul{margin:0;padding-left:1.1em}.guide li{margin:3px 0}
+.reading{margin:12px 0 0;font-size:14px;line-height:1.7;padding:10px 12px;border-radius:8px;background:var(--sunk);border:1px solid var(--line)}
+.rtag{display:inline-block;font-size:11px;font-weight:700;color:var(--surface);background:var(--accent);border-radius:4px;padding:0 6px;margin-right:8px;vertical-align:1px}
+.panel.slim{padding:10px 16px}.panel.slim h2{margin:0}.panel.slim .reading{margin-top:8px}
+.sigs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.sig{font-size:12px;padding:3px 10px;border-radius:999px;background:var(--sunk);border:1px solid var(--line);color:var(--muted)}
+.sig.up{color:var(--up-x);border-color:currentColor}.sig.dn{color:var(--down-x);border-color:currentColor}.sig.warn{color:var(--warn);border-color:currentColor}
+.kwrap{overflow:hidden}
+.kline .khit{cursor:crosshair}
+.kline .ph{transition:opacity .2s}.kline.focus .ph:not(.on){opacity:.25}.kline.focus .ph.on rect{opacity:.18}
+.story{margin-top:16px;border-top:1px solid var(--line);padding-top:12px}
+.story h3{margin:0 0 6px;font-size:15px}
+.story-sum{margin:0 0 10px;font-size:14px;line-height:1.75}
+.phases{list-style:none;margin:0;padding:0;display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.phases li{display:flex;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--sunk);cursor:pointer;transition:border-color .15s,transform .15s}
+.phases li:hover,.phases li.on{border-color:var(--accent);transform:translateY(-1px)}
+.pn{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:var(--surface)}
+.pn.a{background:var(--accent)}.pn.b{background:var(--pm)}
+.pt-h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:14px}.pt-h span{font-size:11px;color:var(--faint)}
+.phases p{margin:4px 0 0;font-size:13px;line-height:1.65;color:var(--muted)}
+.flow{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:26px}
+@media (max-width:900px){.flow{grid-auto-flow:row;gap:22px}}
+.node{position:relative;background:var(--sunk);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.node .step{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--accent);margin-bottom:4px}
+.node p{margin:0;font-size:13px;line-height:1.65}
+.node:not(:last-child)::after{content:"→";position:absolute;right:-20px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:16px}
+@media (max-width:900px){.node:not(:last-child)::after{content:"↓";right:auto;left:50%;top:auto;bottom:-21px;transform:translateX(-50%)}}
+.assets{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.assets span{font-size:11px;font-weight:600;padding:1px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--line)}
+.assets .up{color:var(--up-x)}.assets .dn{color:var(--down-x)}
+@media (prefers-reduced-motion:no-preference){.desk.anim .node{animation:rise .5s calc(.3s + var(--k) * .12s) both}.desk.anim .kline .cdl{animation:fade .5s .2s both}}
+.halo{paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round}
+.evlist{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin-top:6px}
+.evlist b{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;background:var(--fg);color:var(--surface);font-size:10px;margin-right:2px}
+.toast:not(.on){visibility:hidden;transition:transform .35s,visibility 0s .35s}
+.ychips{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.ychip{background:var(--sunk);border-radius:8px;padding:8px 10px;display:grid;gap:1px}
+.ychip .k{font-size:11px;color:var(--muted)}.ychip .v{font-size:19px;font-weight:600}.ychip .d{font-size:11px;color:var(--faint)}
+.ygrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.ygrid{grid-template-columns:minmax(0,1fr)}}
+.liveband{padding:12px 16px}
+.lb-h{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;margin-bottom:10px}
+.lb-t{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:14px}
+.lb-s{font-size:12px;color:var(--muted)}.lb-s .stale{color:var(--warn)}
+.pulse.off{background:var(--warn);animation:none}
+.lb-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.lb-i{background:var(--sunk);border-radius:8px;padding:8px 10px;display:grid;gap:1px;min-width:0;position:relative}
+.lb-i .k{font-size:11px;color:var(--muted)}.lb-i .v{font-size:18px;font-weight:600}.lb-i .v small{font-size:11px;color:var(--muted);font-weight:400}
+.lb-i .v .chg{font-size:13px}.lb-i .s{font-size:11px;color:var(--faint)}
+.spark{width:100%;max-width:140px;height:auto;margin-top:2px}
+.kseg{margin-left:auto}
+/* motion */
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--fg);color:var(--surface);font:500 12px/1.4 var(--f-num);padding:4px 8px;border-radius:6px;transform:translate(-50%,calc(-100% - 10px));opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.chart .hit{cursor:crosshair}
+.chart .pt{transition:r .15s}
+.ladder .scn{transition:opacity .2s}
+.ladder.focus .scn:not(.on){opacity:.18}
+.sc-table tr[data-i]{cursor:pointer;transition:background .15s}
+.sc-table tr[data-i]:hover,.sc-table tr.on{background:var(--sunk)}
+.kpi{transition:transform .2s,box-shadow .2s,border-color .2s}
+.kpi:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgb(0 0 0 / .08);border-color:var(--accent)}
+.live{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);background:var(--sunk);border:1px solid var(--line);border-radius:999px;padding:3px 10px;white-space:nowrap}
+.live b{font-weight:600;color:var(--fg)}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--down);box-shadow:0 0 0 0 var(--down)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translate(-50%,140%);z-index:30;background:var(--fg);color:var(--surface);border-radius:10px;padding:10px 12px 10px 16px;display:flex;gap:12px;align-items:center;font-size:14px;box-shadow:0 10px 30px rgb(0 0 0 / .25);transition:transform .35s cubic-bezier(.2,.8,.2,1);max-width:calc(100% - 32px)}
+.toast.on{transform:translate(-50%,0)}
+.toast button{border:0;border-radius:6px;padding:4px 10px;background:var(--accent);color:#fff;font-weight:600}
+.verdict{position:relative;overflow:hidden}
+@media (prefers-reduced-motion:no-preference){
+  .desk.anim>*{animation:rise .5s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 70ms)}
+  @keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+  .desk.anim .draw{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);animation:draw 1.1s .25s cubic-bezier(.4,0,.2,1) forwards}
+  @keyframes draw{to{stroke-dashoffset:0}}
+  .desk.anim .fadein{animation:fade .8s .8s both}@keyframes fade{from{opacity:0}}
+  .desk.anim .needle{animation:needle 1.2s .3s cubic-bezier(.3,1.4,.5,1) both}
+  @keyframes needle{from{transform:rotate(var(--a))}to{transform:rotate(0)}}
+  .desk.anim .gy-b,.desk.anim .gy-t,.desk.anim .gx-l,.desk.anim .gx-r{transform-box:fill-box;animation:grow .7s .3s cubic-bezier(.2,.8,.2,1) both}
+  .gy-b{transform-origin:bottom}.gy-t{transform-origin:top}.gx-l{transform-origin:left}.gx-r{transform-origin:right}
+  .desk.anim .gy-b,.desk.anim .gy-t{animation-name:growy}
+  @keyframes growy{from{transform:scaleY(0)}}@keyframes grow{from{transform:scaleX(0)}}
+  .desk.anim .hb-bar{animation:grow .7s .35s cubic-bezier(.2,.8,.2,1) both}
+  .hb-bar.up{transform-origin:left}.hb-bar.down{transform-origin:right}
+  .desk.anim .ladder .scn{animation:fade .6s calc(.4s + var(--d,0s)) both}
+  .pline{animation:breathe 2.4s ease-in-out infinite}@keyframes breathe{50%{opacity:.45}}
+  .lastpt{animation:ping 2.4s ease-out infinite;transform-box:fill-box;transform-origin:center}@keyframes ping{0%{stroke-width:1.5}50%{stroke-width:6;stroke-opacity:.35}100%{stroke-width:1.5}}
+  .pulse{animation:pulse 2s infinite}@keyframes pulse{70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+  .verdict::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 35%,rgb(255 255 255 / .35) 50%,transparent 65%);transform:translateX(-100%);animation:sheen 4.5s 1s ease-in-out infinite}
+  @keyframes sheen{0%{transform:translateX(-100%)}30%,100%{transform:translateX(100%)}}
+}
+</style>
+
+<header class="mast"><div class="wrap">
+  <div class="brand">
+    <span class="logo" aria-hidden="true"><svg width="18" height="18" viewBox="0 0 18 18"><rect x="2" y="9" width="3" height="7" rx="1" fill="#ff6b72"/><rect x="7.5" y="4" width="3" height="12" rx="1" fill="#7aa7f5"/><rect x="13" y="7" width="3" height="9" rx="1" fill="#3fd18b"/></svg></span>
+    <div><h1>Dami 加密日報</h1><div class="sub">早報 07:55 · 晚報＋美股 20:52（台北）</div></div>
+  </div>
+  <div class="tools">
+    <span class="live" id="live" aria-live="polite"><i class="pulse"></i><span id="next">同步中…</span></span>
+    <div class="seg" role="group" aria-label="報告類型">
+      <button id="f-all" data-k="all" aria-pressed="true">全部</button>
+      <button id="f-am" data-k="morning" aria-pressed="false">早報</button>
+      <button id="f-pm" data-k="evening" aria-pressed="false">晚報</button>
+    </div>
+  </div>
+</div></header>
+
+<main><div class="wrap">
+  <nav class="idx" id="idx" aria-label="日報列表"></nav>
+  <section class="desk" id="desk">
+    <div class="panel empty"><h2>正在載入日報…</h2><p>每天早上 07:55 會有加密早報，晚上 20:52 會有加密＋美股晚報，產出後自動出現在這裡。</p></div>
+  </section>
+</div></main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script>
+const KIND={morning:"早報",evening:"晚報＋美股"};
+const state={reports:[],filter:"all",current:null,loaded:false};
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const isNum=v=>typeof v==="number"&&isFinite(v);
+const fmt=(v,d=0)=>isNum(v)?v.toLocaleString("en-US",{minimumFractionDigits:d,maximumFractionDigits:d}):"—";
+const sgn=(v,d=1)=>isNum(v)?(v>0?"+":"")+fmt(v,d):"—";
+const dir=v=>!isNum(v)||v===0?"flat":v>0?"up":"down";
+const svgNS="http://www.w3.org/2000/svg";
+function weekday(d){const t=new Date(d+"T12:00:00+08:00");return isNaN(t)?"":"週"+"日一二三四五六"[t.getDay()]}
+function when(iso){try{return new Date(iso).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false})}catch(e){return iso||""}}
+const css=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
+
+function visible(){return state.reports.filter(r=>state.filter==="all"||r.kind===state.filter)}
+
+function renderIndex(){
+  const byDay=new Map();
+  visible().forEach(r=>{if(!byDay.has(r.date))byDay.set(r.date,[]);byDay.get(r.date).push(r)});
+  const nav=$("#idx"); nav.innerHTML='<p class="idx-title">報告</p>';
+  for(const [d,items] of byDay){
+    const box=document.createElement("div"); box.className="day";
+    box.innerHTML='<div class="day-label">'+esc(d.slice(5).replace("-","/"))+" "+weekday(d)+'</div>';
+    items.sort((a,b)=>a.kind==="evening"?-1:1).forEach(r=>{
+      const a=document.createElement("a"); a.href="#r-"+r.id;
+      if(r.id===state.current)a.setAttribute("aria-current","true");
+      a.innerHTML='<span class="dot '+esc(r.kind)+'"></span>'+esc(KIND[r.kind]||r.kind)+(r.metrics?.stance?' <span style="margin-left:auto;color:var(--faint);font-size:12px">'+esc(r.metrics.stance)+'</span>':"");
+      box.appendChild(a);
+    });
+    nav.appendChild(box);
+  }
+}
+
+/* ---------- charts ---------- */
+function el(tag,attrs,parent){const e=document.createElementNS(svgNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
+
+function gauge(v){
+  const w=150,h=86,cx=75,cy=78,r=62;
+  const s=el("svg",{viewBox:`0 0 ${w} ${h}`,role:"img","aria-label":"恐懼貪婪指數 "+v});
+  const seg=[[0,25,"--down-x"],[25,45,"--warn"],[45,55,"--faint"],[55,75,"--warn"],[75,100,"--up-x"]];
+  const pt=(p,rr)=>{const a=Math.PI*(1-p/100);return [cx+rr*Math.cos(a),cy-rr*Math.sin(a)]};
+  seg.forEach(([a,b,c])=>{const [x1,y1]=pt(a,r),[x2,y2]=pt(b,r);el("path",{d:`M${x1} ${y1} A${r} ${r} 0 0 1 ${x2} ${y2}`,fill:"none",stroke:css(c),"stroke-width":9,opacity:.35},s)});
+  if(isNum(v)){const [x,y]=pt(v,r);const [x0,y0]=pt(0,r);el("path",{d:`M${x0} ${y0} A${r} ${r} 0 0 1 ${x} ${y}`,fill:"none",stroke:css("--fg"),"stroke-width":9,"stroke-linecap":"round",class:"draw"},s);
+    const [nx,ny]=pt(v,r-18);const nd=el("line",{x1:cx,y1:cy,x2:nx,y2:ny,stroke:css("--fg"),"stroke-width":2,class:"needle"},s);nd.style.setProperty("--a",(-v*1.8)+"deg");nd.style.transformOrigin=cx+"px "+cy+"px";el("circle",{cx,cy,r:3.5,fill:css("--fg")},s)}
+  return s;
+}
+
+function flowBar(btc,eth){
+  const w=170,h=40,mid=85,max=Math.max(700,Math.abs(btc||0),Math.abs(eth||0));
+  const s=el("svg",{viewBox:`0 0 ${w} ${h}`,role:"img","aria-label":"ETF 淨流量"});
+  el("line",{x1:mid,y1:0,x2:mid,y2:h,stroke:css("--line")},s);
+  [[btc,"BTC",6],[eth,"ETH",24]].forEach(([v,l,y])=>{
+    if(!isNum(v))return;const len=Math.abs(v)/max*(mid-26);
+    el("rect",{x:v>=0?mid:mid-len,y,width:Math.max(len,1),height:10,rx:2,fill:css(v>=0?"--up-x":"--down-x"),class:v>=0?"gx-l":"gx-r"},s);
+    const t=el("text",{x:v>=0?mid-4:mid+4,y:y+9,"text-anchor":v>=0?"end":"start","font-size":10,fill:css("--muted"),"font-family":"IBM Plex Mono, monospace"},s);t.textContent=l;
+  });
+  return s;
+}
+
+function ladder(m,price){
+  const sc=(m.scenarios||[]).filter(x=>isNum(x.entry));
+  const lv=m.levels||{};
+  const vals=[price,...(lv.support||[]),...(lv.resistance||[]),...sc.flatMap(x=>[x.entry,x.stop,x.t1,x.t2])].filter(isNum);
+  if(vals.length<2)return null;
+  let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*.06||500;lo-=pad;hi+=pad;
+  const narrow=(document.getElementById('desk')?.clientWidth||900)<560;
+  const W=narrow?380:560,H=narrow?360:320,L=8,R=58,T=10,B=26,LBL=narrow?70:150,RL=narrow?78:96;
+  const y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart ladder",role:"img","aria-label":"BTC 關鍵價位與情境"}),svg=s;
+  const step=niceStep((hi-lo)/6);
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=fmt(v)}
+  (lv.resistance||[]).forEach(v=>{el("rect",{x:L,width:W-R-L,y:y(v)-3,height:6,fill:css("--down-x"),opacity:.14},s);lab(s,L+4,y(v)-6,"壓力 "+fmt(v),"--down-x")});
+  (lv.support||[]).forEach(v=>{el("rect",{x:L,width:W-R-L,y:y(v)-3,height:6,fill:css("--up-x"),opacity:.14},s);lab(s,L+4,y(v)+14,"支撐 "+fmt(v),"--up-x")});
+  const cols=sc.length,colW=(W-R-L-LBL-RL)/Math.max(cols,1)+RL/Math.max(cols,1)*0;
+  sc.forEach((x,i)=>{
+    const cx=L+LBL+colW*(i+.35)+(RL/cols)*i,bw=Math.min(30,colW*.45);
+    const good=x.side==="short"?"--down-x":"--up-x";const s=el("g",{class:"scn","data-i":i},svg);
+    el("rect",{x:cx-bw/2,width:bw,y:Math.min(y(x.entry),y(x.stop)),height:Math.abs(y(x.entry)-y(x.stop)),fill:css("--faint"),opacity:.35,rx:3},s);
+    el("rect",{x:cx-bw/2,width:bw,y:Math.min(y(x.entry),y(x.t2??x.t1)),height:Math.abs(y(x.entry)-y(x.t2??x.t1)),fill:css(good),opacity:.22,rx:3},s);
+    [[x.t1,"T1"],[x.t2,"T2"]].forEach(([v,n])=>{if(!isNum(v))return;el("line",{x1:cx-bw/2-4,x2:cx+bw/2+4,y1:y(v),y2:y(v),stroke:css(good),"stroke-width":2},s);tx(s,cx+bw/2+8,y(v)+4,n+" "+fmt(v),good)});
+    el("line",{x1:cx-bw/2-4,x2:cx+bw/2+4,y1:y(x.stop),y2:y(x.stop),stroke:css("--fg"),"stroke-width":2,"stroke-dasharray":"3 2"},s);tx(s,cx+bw/2+8,y(x.stop)+4,"停損 "+fmt(x.stop),"--muted");
+    el("circle",{cx,cy:y(x.entry),r:5,fill:css("--surface"),stroke:css(good),"stroke-width":2.5},s);tx(s,cx+bw/2+8,y(x.entry)+4,"進場 "+fmt(x.entry),"--fg");
+    const h=el("text",{x:cx,y:H-8,"text-anchor":"middle","font-size":12,"font-weight":700},s);h.style.fill=css(good);h.textContent=x.name;
+  });
+  if(isNum(price)){el("line",{x1:L,x2:W-R,y1:y(price),y2:y(price),stroke:css("--accent"),"stroke-width":1.5,class:"pline"},s);
+    el("rect",{x:W-R+2,y:y(price)-9,width:R-2,height:18,rx:4,fill:css("--accent")},s);const t=el("text",{x:W-R+6,y:y(price)+4},s);t.style.fill=css("--surface");t.style.fontWeight=600;t.textContent=fmt(price);
+}
+  if(Array.isArray(m.prices?.[0]?.range24h)){const [a,b]=m.prices[0].range24h;el("rect",{x:L+LBL-24,width:6,y:y(b),height:y(a)-y(b),fill:css("--accent"),opacity:.45,rx:2},s);tx(s,L+LBL-48,y(b)-4,"24h","--accent")}
+  return s;
+}
+function lab(s,x,y,t,c){const e=el("text",{x,y,"font-size":11},s);e.style.fill=css(c);e.textContent=t}
+function tx(s,x,y,t,c){const e=el("text",{x,y,"font-size":11},s);e.style.fill=css(c);e.textContent=t}
+function niceStep(raw){const p=Math.pow(10,Math.floor(Math.log10(raw)));for(const m of[1,2,2.5,5,10])if(raw<=m*p)return m*p;return 10*p}
+
+function lineChart(points,{label,dec=0,color="--accent",zero=false,band}={}){
+  if(points.length<2)return null;
+  const W=320,H=150,L=8,R=52,T=12,B=22;
+  let vs=points.map(p=>p.v);let lo=Math.min(...vs),hi=Math.max(...vs);
+  if(band){lo=Math.min(lo,band[0]);hi=Math.max(hi,band[1])}
+  if(zero){lo=Math.min(lo,0);hi=Math.max(hi,0)}
+  const pad=(hi-lo)*.12||1;lo-=pad;hi+=pad;
+  const x=i=>L+i/(points.length-1)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":label});
+  const step=niceStep((hi-lo)/4);
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=fmt(v,step<1?1:0)}
+  const d=points.map((p,i)=>(i?"L":"M")+x(i)+" "+y(p.v)).join(" ");
+  el("path",{d:d+` L${x(points.length-1)} ${H-B} L${x(0)} ${H-B} Z`,fill:css(color),opacity:.10,class:"fadein"},s);
+  el("path",{d,fill:"none",stroke:css(color),"stroke-width":2,"stroke-linejoin":"round",class:"draw"},s);
+  points.forEach((p,i)=>{const last=i===points.length-1;el("circle",{cx:x(i),cy:y(p.v),r:last?4:2.5,fill:last?css(color):css("--surface"),stroke:css(color),"stroke-width":1.5,class:"pt"+(last?" lastpt":"")},s);el("circle",{cx:x(i),cy:y(p.v),r:12,fill:"transparent",class:"hit","data-tip":p.l+"　"+fmt(p.v,dec)},s);
+    if(i===0||last||points.length<=6){const t=el("text",{x:x(i),y:H-6,"text-anchor":i===0?"start":last?"end":"middle"},s);t.textContent=p.l}});
+  const lp=points[points.length-1];const t=el("text",{x:x(points.length-1)-6,y:y(lp.v)-8,"text-anchor":"end","font-weight":600},s);t.style.fill=css("--fg");t.textContent=fmt(lp.v,dec);
+  return s;
+}
+
+function barChart(points,{label}={}){
+  if(points.length<1)return null;
+  const W=320,H=150,L=8,R=52,T=12,B=22;
+  const max=Math.max(...points.map(p=>Math.abs(p.v)),100)*1.15;
+  const y=v=>T+(max-v)/(2*max)*(H-T-B);
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":label});
+  [max*0.75,0,-max*0.75].forEach(v=>{el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=fmt(Math.round(v/50)*50)});
+  const bw=Math.min(28,(W-L-R)/points.length*.6);
+  points.forEach((p,i)=>{const cx=L+(i+.5)*(W-L-R)/points.length;
+    el("rect",{x:cx-bw/2,width:bw,y:Math.min(y(p.v),y(0)),height:Math.max(Math.abs(y(p.v)-y(0)),1.5),rx:2,fill:css(p.v>=0?"--up-x":"--down-x"),class:(p.v>=0?"gy-b":"gy-t")+" hit","data-tip":p.l+"　"+sgn(p.v,0)+" 百萬美元"},s);
+    const t=el("text",{x:cx,y:H-6,"text-anchor":"middle"},s);t.textContent=p.l;
+    const vt=el("text",{x:cx,y:p.v>=0?y(p.v)-4:y(p.v)+12,"text-anchor":"middle","font-weight":600},s);vt.style.fill=css("--fg");vt.textContent=sgn(p.v,0)});
+  return s;
+}
+
+function hbar(stocks){
+  if(!stocks?.length)return null;
+  const rows=stocks.filter(x=>isNum(x.chg));if(!rows.length)return null;
+  const max=Math.max(...rows.map(r=>Math.abs(r.chg)),1);
+  const hasPos=rows.some(r=>r.chg>0),hasNeg=rows.some(r=>r.chg<0);
+  const zero=hasPos&&hasNeg?50:hasNeg?100:0, span=hasPos&&hasNeg?50:100;
+  const box=document.createElement("div");box.className="hb";box.setAttribute("role","list");box.setAttribute("aria-label","追蹤標的漲跌");
+  box.innerHTML=rows.map(r=>{const w=Math.max(Math.abs(r.chg)/max*span,1);const left=r.chg>=0?zero:zero-w;
+    return '<div class="hb-row" role="listitem"><span class="hb-sym num">'+esc(r.sym)+'</span><span class="hb-track"><i class="hb-zero" style="left:'+zero+'%"></i><i class="hb-bar '+(r.chg>=0?"up":"down")+'" style="left:'+left+'%;width:'+w+'%"></i></span><span class="hb-val num chg '+dir(r.chg)+'">'+sgn(r.chg,2)+'%</span>'+(r.note?'<span class="hb-note">'+esc(r.note)+'</span>':'')+'</div>'}).join("");
+  return box;
+}
+
+/* ---------- reading guides ---------- */
+const GUIDE={
+ kpis:["恐懼貪婪指數 0–100：25 以下是極度恐懼，常出現在恐慌拋售之後；75 以上是極度貪婪，代表追高情緒重。它反映情緒，不是買賣訊號。","ETF 淨流量：正值代表新資金透過 ETF 買進現貨，負值代表贖回。數據以美股交易日計，週末沒有新數字。","資金費率：永續合約多空之間的定期費用。正值是多方付給空方，代表做多的人比較多；高於約 0.03%／8 小時就算擁擠，容易出現多單被連環清算。","多空帳戶比：是「帳戶數」比例，不是部位金額。帳戶大多做多、價格卻往下時，代表散戶站錯邊，下跌時清算會放大跌幅。"],
+ kline:["每一根 K 線代表 4 小時：實心綠色是這 4 小時收漲、紅色是收跌；上下細線（影線）是期間最高和最低價。","橘線 EMA20 看短期趨勢，紫線 EMA50 看中期趨勢。價格在兩條線下方、而且 EMA20 在 EMA50 下方，叫「空頭排列」，反彈常在均線附近遇到賣壓；反過來就是多頭排列。","淡藍色帶是布林通道（20 根均價上下 2 個標準差）。通道收窄代表波動變小、常在醞釀方向；碰到上下軌不等於一定反轉。","下方柱子是成交量。長 K 線搭配爆量，代表有真實資金推動（例如消息面）；縮量的上漲或下跌比較容易被收回。","虛線是報告列的支撐（綠）和壓力（紅），彩色底帶是報告標出的走勢階段，可以對照下方「為什麼是這個走勢」。"],
+ causal:["這條鏈從左到右讀：先看「現在發生什麼」，再看背後的共同原因，接著是透過哪些管道傳到別的市場、誰先反應誰後反應，最後是用什麼數據驗證這個判斷。","同一個原因常同時影響美股和加密貨幣，所以兩邊一起跌不一定是互相拖累，可能是共同受到利率或風險情緒影響。"],
+ ladder:["中間藍線是報告產出時的價格，綠色帶是支撐、紅色帶是壓力。","每個情境的柱子：圓點是進場價，灰色段是到停損的距離（可能虧的），彩色段是到目標的距離（可能賺的）。彩色段比灰色段長越多，風報比越好。","情境要等「觸發條件」成立才算數，價格在兩個情境中間時就是不交易區。"],
+ trends:["每個點是一份報告當下的快照，不是連續行情；看的是報告與報告之間的變化方向。","ETF 柱以美股交易日排列，綠柱是淨流入、紅柱是淨流出。連續幾天流出通常代表機構在減碼。","恐懼貪婪從低檔回升，代表情緒在修復；在恐懼區還持續下降，代表賣壓還沒結束。"],
+ macro:["10 年美債殖利率上升，代表資金成本變高，成長股和 BTC 這類高估值資產通常承壓。","美元指數走強，全球美元流動性變緊，對風險資產不利。","油價推動通膨預期，會影響 Fed 會不會升息；升息機率越高，風險資產越容易被壓。","VIX 是美股的恐慌指標，20 以上代表市場在避險。"],
+ stocks:["長條是前一個交易日的漲跌幅。QQQ 是整體風險開關：QQQ 跌、半導體跌得更多，通常代表市場在殺高估值科技股，BTC 也常同步承壓。"],
+ checks:["上一份報告留下的觀察點，今天實際的結果。連續不成立的判斷要特別注意，代表原本的看法可能有偏差。"]
+};
+function guideBtn(p,key){if(!GUIDE[key])return;const h=p.querySelector("h2");const b=document.createElement("button");b.type="button";b.className="gbtn";b.textContent="怎麼看";b.setAttribute("aria-expanded","false");
+  const box=document.createElement("div");box.className="guide";box.hidden=true;box.innerHTML="<ul>"+GUIDE[key].map(t=>"<li>"+esc(t)+"</li>").join("")+"</ul>";
+  b.onclick=()=>{box.hidden=!box.hidden;b.setAttribute("aria-expanded",String(!box.hidden))};
+  const small=h.querySelector("small");if(small)small.after(b);else h.appendChild(b);h.after(box)}
+function reading(m,key){const t=m.readings?.[key];if(!t)return null;const d=document.createElement("p");d.className="reading";d.innerHTML='<span class="rtag">解讀</span>'+esc(t);return d}
+
+/* ---------- K line ---------- */
+function emaArr(a,p){const k=2/(p+1),o=[];a.forEach((x,i)=>o.push(i?x*k+o[i-1]*(1-k):x));return o}
+function bollArr(a,p=20,mul=2){return a.map((_,i)=>{if(i<p-1)return null;const s=a.slice(i-p+1,i+1),mu=s.reduce((x,y)=>x+y,0)/p,sd=Math.sqrt(s.reduce((x,y)=>x+(y-mu)**2,0)/p);return [mu-mul*sd,mu,mu+mul*sd]})}
+const tpe=t=>new Date(t+8*3600e3);
+const tLabel=t=>{const d=tpe(t);return String(d.getUTCMonth()+1).padStart(2,"0")+"/"+String(d.getUTCDate()).padStart(2,"0")+" "+String(d.getUTCHours()).padStart(2,"0")+":00"};
+function klineData(m){
+  const c=m.candles;if(!c?.t?.length||c.t.length<30)return null;
+  const N=c.t.length,S=Math.max(0,N-90),e20=emaArr(c.c,20),e50=emaArr(c.c,50),bb=bollArr(c.c);
+  return {c,N,S,e20,e50,bb};
+}
+function idxAt(c,iso){const t=Date.parse(iso);if(!isFinite(t))return -1;for(let i=c.t.length-1;i>=0;i--)if(c.t[i]<=t)return i;return 0}
+function klineSignals(k){
+  const {c,N,S,e20,e50,bb}=k,i=N-1,last=c.c[i],out=[];
+  const p20=(last/e20[i]-1)*100,p50=(last/e50[i]-1)*100;
+  out.push({t:(e20[i]<e50[i]?"空頭排列":"多頭排列")+"（EMA20 "+(e20[i]<e50[i]?"<":">")+" EMA50）",s:e20[i]<e50[i]?"dn":"up"});
+  out.push({t:"距 EMA20 "+sgn(p20,1)+"%，距 EMA50 "+sgn(p50,1)+"%",s:p20<0?"dn":"up"});
+  const b=bb[i];if(b){const pos=(last-b[0])/(b[2]-b[0]);const w=(b[2]-b[0])/b[1]*100;
+    const ws=bb.slice(N-30,N-1).filter(Boolean).map(x=>(x[2]-x[0])/x[1]*100),wa=ws.reduce((x,y)=>x+y,0)/ws.length;
+    out.push({t:"布林位置："+(pos<.2?"貼近下軌":pos>.8?"貼近上軌":pos<.45?"中軌下方":pos>.55?"中軌上方":"中軌附近"),s:pos<.45?"dn":pos>.55?"up":"nt"});
+    out.push({t:"通道寬度 "+fmt(w,1)+"%（"+(w<wa*.8?"收窄，醞釀變盤":w>wa*1.2?"擴張，波動放大":"一般")+"）",s:"nt"})}
+  const v6=c.v.slice(N-6).reduce((x,y)=>x+y,0)/6,va=c.v.slice(S,N).reduce((x,y)=>x+y,0)/(N-S);
+  out.push({t:"近 24 小時量能為 15 天均量的 "+fmt(v6/va,1)+" 倍",s:v6/va>1.3?"warn":"nt"});
+  const chg=(last/c.o[S]-1)*100;out.push({t:"15 天漲跌 "+sgn(chg,1)+"%",s:chg<0?"dn":"up"});
+  return out;
+}
+function klineChart(m,k){
+  const {c,N,S,e20,e50,bb}=k,n=N-S;
+  const narrow=(document.getElementById("desk")?.clientWidth||900)<600;
+  const W=narrow?420:940,L=6,R=60,T=26,MH=narrow?230:280,G=12,VH=narrow?44:60,B=22,H=T+MH+G+VH+B;
+  const cw=(W-L-R)/n,x=i=>L+(i-S+.5)*cw;
+  let lo=Infinity,hi=-Infinity;for(let i=S;i<N;i++){lo=Math.min(lo,c.l[i],bb[i]?.[0]??Infinity);hi=Math.max(hi,c.h[i],bb[i]?.[2]??-Infinity)}
+  const lv=m.levels||{},span=hi-lo;
+  const pad=span*.05;lo-=pad;hi+=pad;
+  const y=v=>T+(hi-v)/(hi-lo)*MH,vmax=Math.max(...c.v.slice(S,N)),vy=v=>T+MH+G+VH-(v/vmax)*VH;
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart kline",role:"img","aria-label":"BTC 4 小時 K 線"});
+  const step=niceStep((hi-lo)/6);
+  for(let v=Math.ceil(lo/step)*step;v<=hi;v+=step){el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=fmt(v)}
+  // phases
+  const ph=(m.klineStory?.phases||[]).map((p,j)=>({...p,a:Math.max(S,idxAt(c,p.from)),b:Math.min(N-1,idxAt(c,p.to)),j})).filter(p=>p.b>=S&&p.b>=p.a);
+  ph.forEach(p=>{const g=el("g",{class:"ph","data-i":p.j},s);
+    el("rect",{x:x(p.a)-cw/2,width:(p.b-p.a+1)*cw,y:T,height:MH+G+VH,fill:css(p.j%2?"--pm":"--accent"),opacity:.07},g);
+    el("circle",{cx:x(p.a)-cw/2+10,cy:T-12,r:8,fill:css(p.j%2?"--pm":"--accent")},g);
+    const t=el("text",{x:x(p.a)-cw/2+10,y:T-8,"text-anchor":"middle","font-size":10,"font-weight":700},g);t.style.fill=css("--surface");t.textContent=p.j+1});
+  // bollinger
+  const up=[],dn=[];for(let i=S;i<N;i++)if(bb[i]){up.push([x(i),y(bb[i][2])]);dn.push([x(i),y(bb[i][0])])}
+  if(up.length){el("path",{d:"M"+up.map(p=>p.join(" ")).join(" L")+" L"+dn.reverse().map(p=>p.join(" ")).join(" L")+" Z",fill:css("--accent"),opacity:.08,class:"fadein"},s)}
+  // levels
+  const lvls=[...(lv.resistance||[]).map(v=>[v,"--down-x","壓 "]),...(lv.support||[]).map(v=>[v,"--up-x","撐 "])].filter(([v])=>v>lo&&v<hi).sort((a,b)=>b[0]-a[0]);
+  let prevY=-99;const labs=[];
+  lvls.forEach(([v,col,n])=>{el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),stroke:css(col),"stroke-width":1,"stroke-dasharray":"4 3",opacity:.8},s);
+    let ly=Math.max(y(v)-3,prevY+11);prevY=ly;labs.push([ly,col,n+fmt(v)])});
+  labs.forEach(([ly,col,txt])=>{const t=el("text",{x:L+4,y:ly,"font-size":10,"font-weight":600,class:"halo"},s);t.style.fill=css(col);t.textContent=txt});
+  // candles + volume
+  for(let i=S;i<N;i++){const upc=c.c[i]>=c.o[i],col=css(upc?"--up-x":"--down-x"),bw=Math.max(1,cw*.62);
+    const g=el("g",{class:"cdl"},s);if(c.lastOpen&&i===N-1)g.setAttribute("opacity",.45);
+    el("line",{x1:x(i),x2:x(i),y1:y(c.h[i]),y2:y(c.l[i]),stroke:col,"stroke-width":1},g);
+    el("rect",{x:x(i)-bw/2,width:bw,y:y(Math.max(c.o[i],c.c[i])),height:Math.max(1,Math.abs(y(c.o[i])-y(c.c[i]))),fill:col},g);
+    el("rect",{x:x(i)-bw/2,width:bw,y:vy(c.v[i]),height:T+MH+G+VH-vy(c.v[i]),fill:col,opacity:.45,class:"gy-b"},s)}
+  // emas
+  const ln=(arr,col)=>el("path",{d:arr.slice(S).map((v,j)=>(j?"L":"M")+x(S+j)+" "+y(v)).join(" "),fill:"none",stroke:css(col),"stroke-width":1.6,class:"draw"},s);
+  ln(e50,"--pm");ln(e20,"--warn");
+  // events
+  let lastEx=-999,row=0;
+  (m.events||[]).map(e=>({...e,i:idxAt(c,e.t)})).filter(e=>e.i>=S).sort((a,b)=>a.i-b.i).forEach((e,k)=>{const i=e.i;
+    el("line",{x1:x(i),x2:x(i),y1:T,y2:T+MH,stroke:css("--fg"),"stroke-width":1,"stroke-dasharray":"2 3",opacity:.5},s);
+    const nb=el("text",{x:x(i),y:T+MH+G-2,"text-anchor":"middle","font-size":9,"font-weight":700},s);nb.style.fill=css("--fg");nb.textContent=String.fromCharCode(65+k);
+    if(narrow)return;row=x(i)-lastEx<110?row+1:0;lastEx=x(i);
+    const right=i>N-12;const t=el("text",{x:x(i)+(right?-4:4),y:T+MH-6-row*13,"text-anchor":right?"end":"start","font-size":10,"font-weight":600,class:"halo"},s);t.style.fill=css("--fg");t.textContent=String.fromCharCode(65+k)+" "+e.label});
+  // last price
+  const lc=c.c[N-1];el("line",{x1:L,x2:W-R,y1:y(lc),y2:y(lc),stroke:css("--accent"),"stroke-width":1,opacity:.6,"stroke-dasharray":"1 2"},s);
+  el("rect",{x:W-R+2,y:y(lc)-9,width:R-2,height:18,rx:4,fill:css("--accent")},s);const lt=el("text",{x:W-R+6,y:y(lc)+4},s);lt.style.fill=css("--surface");lt.style.fontWeight=600;lt.textContent=fmt(lc);
+  // x labels (daily 08:00 Taipei)
+  let lastD=-99;const every=narrow?3:2;for(let i=S;i<N;i++){const d=tpe(c.t[i]);if(d.getUTCHours()===8){const day=Math.floor(c.t[i]/864e5);if(day-lastD>=every){lastD=day;const t=el("text",{x:x(i),y:H-6,"text-anchor":"middle"},s);t.textContent=String(d.getUTCMonth()+1).padStart(2,"0")+"/"+String(d.getUTCDate()).padStart(2,"0")}}}
+  const vl=el("text",{x:L+2,y:T+MH+G+10,"font-size":10},s);vl.textContent="成交量";
+  // crosshair
+  const cross=el("line",{x1:0,x2:0,y1:T,y2:T+MH+G+VH,stroke:css("--fg"),"stroke-width":1,opacity:0,class:"cross"},s);
+  const hit=el("rect",{x:L,y:T,width:W-L-R,height:MH+G+VH,fill:"transparent",class:"khit"},s);
+  const move=e=>{const r=s.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W;let i=Math.round((px-L)/cw-.5)+S;i=Math.max(S,Math.min(N-1,i));
+    cross.setAttribute("x1",x(i));cross.setAttribute("x2",x(i));cross.setAttribute("opacity",.35);
+    const ch=(c.c[i]/c.o[i]-1)*100;tip.style.whiteSpace="pre";
+    showTip(e,tLabel(c.t[i])+" 台北\n開 "+fmt(c.o[i])+"  高 "+fmt(c.h[i])+"\n低 "+fmt(c.l[i])+"  收 "+fmt(c.c[i])+"\n漲跌 "+sgn(ch,2)+"%  量 "+fmt(c.v[i])+"\nEMA20 "+fmt(e20[i])+"  EMA50 "+fmt(e50[i]))};
+  hit.addEventListener("pointermove",move);hit.addEventListener("pointerdown",move);
+  hit.addEventListener("pointerleave",()=>{cross.setAttribute("opacity",0);tip.classList.remove("on");tip.style.whiteSpace=""});
+  return s;
+}
+function klinePanel(m0){
+  const hasLive=!!state.live?.candles?.t?.length,isNew=state.current===newestId();
+  const mode=hasLive?(state.klineMode||(isNew?"live":"report")):"report";
+  const m=mode==="live"?{...m0,candles:state.live.candles}:m0;
+  const k=klineData(m);if(!k)return null;
+  const p=panel("BTC 4 小時 K 線",mode==="live"?"最新行情 · 每小時更新":"報告產出當時");guideBtn(p,"kline");
+  if(hasLive&&m0.candles?.t?.length){const sg=document.createElement("div");sg.className="seg kseg";sg.setAttribute("role","group");sg.setAttribute("aria-label","K 線資料");
+    sg.innerHTML='<button type="button" data-km="live" aria-pressed="'+(mode==="live")+'">最新行情</button><button type="button" data-km="report" aria-pressed="'+(mode==="report")+'">報告當時</button>';
+    sg.querySelectorAll("button").forEach(b=>b.onclick=()=>{state.klineMode=b.dataset.km;renderDesk();afterRender()});
+    p.querySelector("h2").appendChild(sg)}
+  if(mode==="live"&&m.candles.lastOpen){const n=document.createElement("p");n.className="note";n.style.margin="-4px 0 8px";n.textContent="最右邊半透明那根 K 線還沒收盤，會隨下次更新變動；下方的走勢解說與解讀是報告產出時寫的。";p.appendChild(n)}
+  const sig=document.createElement("div");sig.className="sigs";sig.innerHTML=klineSignals(k).map(x=>'<span class="sig '+x.s+'">'+esc(x.t)+'</span>').join("");p.appendChild(sig);
+  const wrap=document.createElement("div");wrap.className="kwrap";wrap.appendChild(klineChart(m,k));p.appendChild(wrap);
+  const lg=document.createElement("div");lg.className="legend";lg.innerHTML='<span><i style="background:var(--warn)"></i>EMA20</span><span><i style="background:var(--pm)"></i>EMA50</span><span><i style="background:var(--accent);opacity:.3"></i>布林通道</span><span><i style="background:var(--up-x)"></i>收漲</span><span><i style="background:var(--down-x)"></i>收跌</span><span class="num" style="margin-left:auto">'+esc(m.candles.src||"")+'</span>';p.appendChild(lg);
+  const evs=(m.events||[]).map(e=>({...e,i:idxAt(m.candles,e.t)})).filter(e=>e.i>=k.S).sort((a,b)=>a.i-b.i);
+  if(evs.length){const el2=document.createElement("div");el2.className="evlist";el2.innerHTML=evs.map((e,j)=>'<span><b>'+String.fromCharCode(65+j)+'</b> '+esc(fmtRange(e.t,"").replace(" – ",""))+' '+esc(e.label)+'</span>').join("");p.appendChild(el2)}
+  const r=reading(m,"kline");if(r)p.appendChild(r);
+  const st=m.klineStory;
+  if(st&&(st.summary||st.phases?.length)){
+    const box=document.createElement("div");box.className="story";
+    box.innerHTML='<h3>為什麼是這個走勢</h3>'+(st.summary?'<p class="story-sum">'+esc(st.summary)+'</p>':"")+
+      '<ol class="phases">'+(st.phases||[]).map((x,j)=>'<li data-i="'+j+'"><span class="pn '+(j%2?"b":"a")+'">'+(j+1)+'</span><div><div class="pt-h"><b>'+esc(x.label||"")+'</b><span class="num">'+esc(fmtRange(x.from,x.to))+'</span></div><p>'+esc(x.why||"")+'</p></div></li>').join("")+'</ol>';
+    p.appendChild(box);
+  }else{const n=document.createElement("p");n.className="note";n.textContent="這份報告沒有附走勢解說；之後的報告會自動加上。";p.appendChild(n)}
+  return p;
+}
+function fmtRange(a,b){const f=s=>{const t=Date.parse(s);if(!isFinite(t))return "";const d=tpe(t);return (d.getUTCMonth()+1)+"/"+d.getUTCDate()+" "+String(d.getUTCHours()).padStart(2,"0")+"時"};return f(a)+" – "+f(b)}
+function wirePhases(root){
+  const svg=root.querySelector(".kline");if(!svg)return;const lis=root.querySelectorAll(".phases li");
+  const on=i=>{svg.classList.toggle("focus",i!=null);svg.querySelectorAll(".ph").forEach(g=>g.classList.toggle("on",g.dataset.i==i));lis.forEach(l=>l.classList.toggle("on",l.dataset.i==i))};
+  lis.forEach(l=>{l.addEventListener("mouseenter",()=>on(l.dataset.i));l.addEventListener("mouseleave",()=>on(null));l.addEventListener("click",()=>on(l.classList.contains("on")?null:l.dataset.i))});
+}
+/* ---------- causal flow ---------- */
+function causalPanel(m){
+  const cs=m.causal;if(!cs?.length)return null;
+  const p=panel("市場因果鏈","從左到右讀");guideBtn(p,"causal");
+  const f=document.createElement("div");f.className="flow";
+  f.innerHTML=cs.map((x,i)=>'<div class="node" style="--k:'+i+'"><span class="step">'+(i+1)+" · "+esc(x.step||"")+'</span><p>'+esc(x.text||"")+'</p>'+(x.assets?.length?'<div class="assets">'+x.assets.map(a=>'<span class="'+(a.dir==="up"?"up":a.dir==="down"?"dn":"nt")+'">'+esc(a.sym)+(a.dir==="up"?" ↑":a.dir==="down"?" ↓":"")+'</span>').join("")+'</div>':"")+'</div>').join("");
+  p.appendChild(f);
+  if(m.causalNote){const n=document.createElement("p");n.className="reading";n.innerHTML='<span class="rtag">推論</span>'+esc(m.causalNote);p.appendChild(n)}
+  return p;
+}
+
+/* ---------- treasury yields ---------- */
+GUIDE.yields=["殖利率是持有美國公債一年能拿到的利息比例。殖利率上升＝債券價格下跌，也代表整個市場的「無風險報酬」變高，股票和 BTC 這類風險資產的吸引力相對下降。","2 年期主要反映市場對 Fed 未來一兩年利率的預期；10 年、30 年期還包含通膨、經濟成長和政府發債量的看法。","利差（10 年 − 2 年）：正值是正常的「正斜率」，負值叫「倒掛」，過去常出現在景氣衰退之前。","四種常見組合：短端漲得比長端多（熊平）＝市場在定價升息；長端漲得比短端多（熊陡）＝擔心通膨或發債太多；短端跌得比長端多（牛陡）＝預期降息；長端跌得多（牛平）＝資金躲進長債避險。","右邊的殖利率曲線把各天期連成一條線，實線是最新、虛線是一個月前，看整條曲線往上或往下移、以及形狀怎麼變。"];
+function bp(v){return isNum(v)?(v>0?"+":"")+Math.round(v*100)+" bp":"—"}
+function yieldAnalysis(Y){
+  const n=Y.dates.length-1,k=Math.max(0,n-21),p=Math.max(0,n-1);
+  const d10=Y.y10[n]-Y.y10[k],d2=Y.y2[n]-Y.y2[k],sp=Y.y10[n]-Y.y2[n],spAgo=Y.y10[k]-Y.y2[k];
+  let shape;
+  if(d2>0&&d10>0)shape=d2>d10?"熊平：短端上升比長端快，市場在定價 Fed 可能再升息":"熊陡：長端上升比短端快，市場擔心通膨或政府發債量";
+  else if(d2<0&&d10<0)shape=d2<d10?"牛陡：短端下降比長端快，市場開始預期降息":"牛平：長端下降比短端快，資金躲進長債避險";
+  else shape=d10>0?"長端上升、短端下降，曲線變陡":"長端下降、短端上升，曲線變平";
+  const tone=Y.y10[n]>=Y.y10[k]?"對成長股與 BTC 的估值是壓力":"對成長股與 BTC 的估值壓力減輕";
+  return {n,k,p,d10,d2,sp,spAgo,text:"10 年債 "+fmt(Y.y10[n],2)+"%，一個月 "+bp(d10)+"；2 年債 "+fmt(Y.y2[n],2)+"%，一個月 "+bp(d2)+"。過去一個月是「"+shape+"」，"+tone+"。10 年－2 年利差 "+bp(sp)+"（一個月前 "+bp(spAgo)+"），"+(sp>=0?"維持正斜率":"仍在倒掛")+"。"};
+}
+function multiLine(dates,series,{label,unit="%",dec=2,zeroLine=false,area=false,H0=220}={}){
+  const narrow=(document.getElementById("desk")?.clientWidth||900)<600;
+  const W=narrow?420:640,H=H0,L=6,R=50,T=12,B=22,n=dates.length;
+  let lo=Infinity,hi=-Infinity;series.forEach(s=>s.vals.forEach(v=>{if(isNum(v)){lo=Math.min(lo,v);hi=Math.max(hi,v)}}));
+  if(zeroLine){lo=Math.min(lo,0);hi=Math.max(hi,0)}
+  const pad=(hi-lo)*.1||.1;lo-=pad;hi+=pad;
+  const x=i=>L+i/(n-1)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":label});
+  const step=niceStep((hi-lo)/5);
+  for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step){el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=(unit==="bp"?Math.round(v*100):v.toFixed(step<.1?2:1))}
+  if(zeroLine)el("line",{x1:L,x2:W-R,y1:y(0),y2:y(0),stroke:css("--fg"),opacity:.4},s);
+  let lastM="";dates.forEach((d,i)=>{const mo=d.slice(5,7);if(mo!==lastM){lastM=mo;if(i>3){const t=el("text",{x:x(i),y:H-6,"text-anchor":"middle"},s);t.textContent=+mo+"月"}}});
+  series.forEach(se=>{const pts=se.vals.map((v,i)=>isNum(v)?[x(i),y(v)]:null).filter(Boolean);if(!pts.length)return;
+    const d="M"+pts.map(p=>p.join(" ")).join(" L");
+    if(area)el("path",{d:d+` L${pts[pts.length-1][0]} ${y(0)} L${pts[0][0]} ${y(0)} Z`,fill:css(se.color),opacity:.15,class:"fadein"},s);
+    el("path",{d,fill:"none",stroke:css(se.color),"stroke-width":se.w||1.8,"stroke-linejoin":"round",class:"draw"},s);
+    const lp=pts[pts.length-1];el("circle",{cx:lp[0],cy:lp[1],r:3,fill:css(se.color)},s)});
+  const cross=el("line",{x1:0,x2:0,y1:T,y2:H-B,stroke:css("--fg"),opacity:0},s);
+  const hit=el("rect",{x:L,y:T,width:W-L-R,height:H-T-B,fill:"transparent",class:"khit"},s);
+  const mv=e=>{const r=s.getBoundingClientRect(),px=(e.clientX-r.left)/r.width*W;const i=Math.max(0,Math.min(n-1,Math.round((px-L)/(W-L-R)*(n-1))));
+    cross.setAttribute("x1",x(i));cross.setAttribute("x2",x(i));cross.setAttribute("opacity",.3);tip.style.whiteSpace="pre";
+    showTip(e,dates[i]+"\n"+series.map(se=>se.name+"  "+(unit==="bp"?bp(se.vals[i]):fmt(se.vals[i],dec)+"%")).join("\n"))};
+  hit.addEventListener("pointermove",mv);hit.addEventListener("pointerdown",mv);hit.addEventListener("pointerleave",()=>{cross.setAttribute("opacity",0);tip.classList.remove("on");tip.style.whiteSpace=""});
+  return s;
+}
+function curveChart(c){
+  const W=360,H=220,L=6,R=44,T=14,B=26,n=c.labels.length;
+  const vals=[...c.now,...c.ago].filter(isNum);let lo=Math.min(...vals),hi=Math.max(...vals);const pad=(hi-lo)*.12||.1;lo-=pad;hi+=pad;
+  const x=i=>L+i/(n-1)*(W-L-R),y=v=>T+(hi-v)/(hi-lo)*(H-T-B);
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"chart",role:"img","aria-label":"殖利率曲線"});
+  const step=niceStep((hi-lo)/5);
+  for(let v=Math.ceil(lo/step)*step;v<=hi+1e-9;v+=step){el("line",{x1:L,x2:W-R,y1:y(v),y2:y(v),class:"grid"},s);const t=el("text",{x:W-R+6,y:y(v)+4},s);t.textContent=v.toFixed(step<.1?2:1)}
+  c.labels.forEach((l,i)=>{if(narrowLbl(l)){const t=el("text",{x:x(i),y:H-8,"text-anchor":"middle"},s);t.textContent=l}});
+  const path=a=>"M"+a.map((v,i)=>isNum(v)?x(i)+" "+y(v):null).filter(Boolean).join(" L");
+  el("path",{d:path(c.ago),fill:"none",stroke:css("--faint"),"stroke-width":1.6,"stroke-dasharray":"4 3"},s);
+  el("path",{d:path(c.now),fill:"none",stroke:css("--accent"),"stroke-width":2.2,class:"draw"},s);
+  c.now.forEach((v,i)=>{if(!isNum(v))return;el("circle",{cx:x(i),cy:y(v),r:3,fill:css("--accent"),class:"pt"},s);el("circle",{cx:x(i),cy:y(v),r:11,fill:"transparent",class:"hit","data-tip":c.labels[i]+"　"+fmt(v,2)+"%（一個月前 "+fmt(c.ago[i],2)+"%，"+bp(v-c.ago[i])+"）"},s)});
+  return s;
+}
+function narrowLbl(l){return ["1M","3M","1Y","2Y","5Y","10Y","30Y"].includes(l)}
+function yieldsPanel(m){
+  const Y=m.yields;if(!Y?.dates?.length||Y.dates.length<25)return null;
+  const A=yieldAnalysis(Y),n=A.n,p=A.p,k=A.k;
+  const pnl=panel("美債殖利率","財政部公布 · 最新 "+Y.asOf+"（美東收盤）");guideBtn(pnl,"yields");
+  const chips=document.createElement("div");chips.className="ychips";
+  const row=(name,arr)=>'<div class="ychip"><span class="k">'+name+'</span><span class="v num">'+fmt(arr[n],2)+'%</span><span class="d num"><span class="chg '+dir(arr[n]-arr[p])+'">日 '+bp(arr[n]-arr[p])+'</span> · <span class="chg '+dir(arr[n]-arr[k])+'">月 '+bp(arr[n]-arr[k])+'</span></span></div>';
+  chips.innerHTML=row("3 個月",Y.y3m)+row("2 年",Y.y2)+row("10 年",Y.y10)+row("30 年",Y.y30)+
+    '<div class="ychip"><span class="k">10Y−2Y 利差</span><span class="v num">'+bp(A.sp)+'</span><span class="d">'+(A.sp>=0?"正斜率":"倒掛")+" · 月前 "+bp(A.spAgo)+'</span></div>';
+  pnl.appendChild(chips);
+  const g=document.createElement("div");g.className="ygrid";
+  const a=document.createElement("div");a.className="trend";a.innerHTML="<h3>近 90 個交易日（%）</h3>";
+  a.appendChild(multiLine(Y.dates,[{name:"3M ",vals:Y.y3m,color:"--faint"},{name:"2Y ",vals:Y.y2,color:"--accent"},{name:"10Y",vals:Y.y10,color:"--warn",w:2.4},{name:"30Y",vals:Y.y30,color:"--pm"}],{label:"美債殖利率走勢"}));
+  const lg=document.createElement("div");lg.className="legend";lg.innerHTML='<span><i style="background:var(--faint)"></i>3 個月</span><span><i style="background:var(--accent)"></i>2 年</span><span><i style="background:var(--warn)"></i>10 年</span><span><i style="background:var(--pm)"></i>30 年</span>';a.appendChild(lg);
+  const sp=Y.y10.map((v,i)=>isNum(v)&&isNum(Y.y2[i])?v-Y.y2[i]:null);
+  const s2=document.createElement("div");s2.className="trend";s2.style.marginTop="12px";s2.innerHTML="<h3>10 年 − 2 年 利差（bp）</h3>";
+  s2.appendChild(multiLine(Y.dates,[{name:"利差",vals:sp,color:"--accent"}],{label:"10年減2年利差",unit:"bp",zeroLine:true,area:true,H0:120}));a.appendChild(s2);
+  const b=document.createElement("div");b.className="trend";b.innerHTML="<h3>殖利率曲線：最新 vs "+esc(Y.curve?.agoDate||"一個月前")+"</h3>";
+  if(Y.curve)b.appendChild(curveChart(Y.curve));
+  const lg2=document.createElement("div");lg2.className="legend";lg2.innerHTML='<span><i style="background:var(--accent)"></i>最新 '+esc(Y.asOf)+'</span><span><i style="background:var(--faint)"></i>一個月前（虛線）</span>';b.appendChild(lg2);
+  g.append(a,b);pnl.appendChild(g);
+  const auto=document.createElement("p");auto.className="reading";auto.innerHTML='<span class="rtag">數據</span>'+esc(A.text);pnl.appendChild(auto);
+  const r=reading(m,"yields");if(r)pnl.appendChild(r);
+  const n2=document.createElement("p");n2.className="note";n2.textContent="來源："+(Y.src||"美國財政部")+"。每日美東收盤後公布，非即時；週末與美國假日沒有新數據。";pnl.appendChild(n2);
+  return pnl;
+}
+
+/* ---------- hourly live market ---------- */
+function agoText(iso){const t=Date.parse(iso);if(!isFinite(t))return "";const m=Math.round((Date.now()-t)/60000);return m<1?"剛剛":m<60?m+" 分鐘前":Math.floor(m/60)+" 小時 "+(m%60)+" 分前"}
+function spark(vals){if(!vals||vals.length<2)return null;const W=120,H=34,lo=Math.min(...vals),hi=Math.max(...vals),r=hi-lo||1;
+  const s=el("svg",{viewBox:`0 0 ${W} ${H}`,class:"spark",role:"img","aria-label":"近 24 小時走勢"});const up=vals[vals.length-1]>=vals[0];
+  const pts=vals.map((v,i)=>[i/(vals.length-1)*(W-4)+2,H-3-(v-lo)/r*(H-6)]);
+  el("path",{d:"M"+pts.map(p=>p.join(" ")).join(" L")+` L${W-2} ${H} L2 ${H} Z`,fill:css(up?"--up-x":"--down-x"),opacity:.12},s);
+  el("path",{d:"M"+pts.map(p=>p.join(" ")).join(" L"),fill:"none",stroke:css(up?"--up-x":"--down-x"),"stroke-width":1.6},s);return s}
+function liveBand(){
+  const L=state.live;if(!L||!L.updatedAt)return null;
+  const p=document.createElement("div");p.className="panel liveband";
+  const mins=(Date.now()-Date.parse(L.updatedAt))/60000,stale=mins>130;
+  p.innerHTML='<div class="lb-h"><span class="lb-t"><i class="pulse'+(stale?" off":"")+'"></i>最新行情</span><span class="lb-s">每小時更新 · '+esc(when(L.updatedAt))+'（'+esc(agoText(L.updatedAt))+'）'+(stale?' · <b class="stale">資料超過 2 小時未更新</b>':"")+'</span></div>';
+  const row=document.createElement("div");row.className="lb-row";
+  (L.prices||[]).forEach(x=>{const d=document.createElement("div");d.className="lb-i";
+    d.innerHTML='<span class="k">'+esc(x.sym)+'</span><span class="v num">'+fmt(x.price,x.price>1000?0:2)+' <span class="chg '+dir(x.chg24h)+'">'+sgn(x.chg24h,2)+'%</span></span><span class="s num">24h '+fmt(x.low,x.low>1000?0:1)+' – '+fmt(x.high,x.high>1000?0:1)+'</span>';
+    if(x.sym==="BTC"&&L.candles?.c){const sp=spark(L.candles.c.slice(-7));if(sp)d.appendChild(sp)}
+    row.appendChild(d)});
+  const item=(k,v,s)=>{const d=document.createElement("div");d.className="lb-i";d.innerHTML='<span class="k">'+k+'</span><span class="v num">'+v+'</span>'+(s?'<span class="s">'+s+'</span>':"");row.appendChild(d)};
+  const fg=L.fearGreed;if(fg)item("恐懼貪婪",fmt(fg.value)+' <small>'+esc(fg.label)+'</small>',"前一日 "+fmt(fg.prev));
+  const fu=L.funding;if(fu)item("資金費率（8h）",sgn(fu.btc,4)+"%","ETH "+sgn(fu.eth,4)+"% · OKX");
+  const ls=L.longShort;if(ls)item("BTC 多方帳戶",fmt(ls.btc,1)+"%","多空比 "+fmt(ls.ratio,2)+" · OKX");
+  const o=L.oi;if(o)item("BTC 未平倉",fmt(o.btcUsdBn,2)+" <small>十億美元</small>","OKX 永續");
+  p.appendChild(row);
+  if(L.errors?.length){const n=document.createElement("p");n.className="note";n.textContent="部分資料這次沒取到："+L.errors.map(e=>e.split(":")[0]).join("、");p.appendChild(n)}
+  return p;
+}
+function newestId(){return state.reports.slice().sort((a,b)=>a.sortKey<b.sortKey?1:-1)[0]?.id}
+
+/* ---------- desk ---------- */
+const stanceClass=s=>/多/.test(s)?"long":/空/.test(s)?"short":/減/.test(s)?"reduce":"wait";
+const stClass=s=>/^成立|觸發/.test(s)?"ok":/不成立|失效/.test(s)?"no":"wait";
+
+function series(sym){
+  return state.reports.slice().sort((a,b)=>a.sortKey<b.sortKey?-1:1).map(r=>{const p=(r.metrics?.prices||[]).find(x=>x.sym===sym);return isNum(p?.price)?{v:p.price,l:r.date.slice(5).replace("-","/")+(r.kind==="evening"?"晚":"早")}:null}).filter(Boolean);
+}
+function seriesField(fn){return state.reports.slice().sort((a,b)=>a.sortKey<b.sortKey?-1:1).map(r=>{const v=fn(r.metrics||{});return isNum(v)?{v,l:r.date.slice(5).replace("-","/")+(r.kind==="evening"?"晚":"早")}:null}).filter(Boolean)}
+function etfSeries(){const m=new Map();state.reports.forEach(r=>{const e=r.metrics?.etf;if(e?.date&&isNum(e.btc))m.set(e.date,e.btc)});return [...m].sort().map(([d,v])=>({v,l:d.slice(5).replace("-","/")}))}
+
+function panel(title,sub){const p=document.createElement("div");p.className="panel";p.innerHTML="<h2><span>"+esc(title)+"</span>"+(sub?"<small>"+esc(sub)+"</small>":"")+"</h2>";return p}
+function put(p,node,fallback){if(node)p.appendChild(node);else{const n=document.createElement("div");n.className="empty-note";n.textContent=fallback;p.appendChild(n)}return p}
+
+function kpi(k,vHTML,sub,extra){const d=document.createElement("div");d.className="kpi";d.innerHTML='<span class="k">'+esc(k)+'</span><span class="v num">'+vHTML+'</span>'+(sub?'<span class="s">'+esc(sub)+'</span>':"");if(extra)d.appendChild(extra);return d}
+
+function renderDesk(){
+  const desk=$("#desk");desk.textContent="";
+  const r=state.reports.find(x=>x.id===state.current);
+  if(!r){desk.innerHTML='<div class="panel empty"><h2>'+(state.loaded?"還沒有日報":"正在載入日報…")+'</h2><p>每天早上 07:55 會有加密早報，晚上 20:52 會有加密＋美股晚報，產出後自動出現在這裡。</p></div>';return}
+  const m=r.metrics||{};
+  // stance band
+  const lb=liveBand();if(lb)desk.appendChild(lb);
+  const band=document.createElement("div");band.className="panel stance";
+  const st=m.stance||"—";
+  band.innerHTML='<div class="verdict '+stanceClass(st)+'"><span class="lbl">'+(r.kind==="evening"?"今晚主建議":"今日主建議")+'</span><span class="v">'+esc(st)+'</span></div>'+
+    '<div><div class="meta"><span class="chip '+esc(r.kind)+'">'+esc(KIND[r.kind]||r.kind)+'</span><span class="num">'+esc(r.date)+" "+weekday(r.date)+(r.updatedAt?" · 產出 "+esc(when(r.updatedAt)):"")+'</span>'+
+    (m.qqqSwitch?'<span class="qqq '+(m.qqqSwitch==="開"?"on":"off")+'">QQQ 風險開關：'+esc(m.qqqSwitch)+'</span>':"")+'</div><p class="lede">'+esc(r.headline||"")+'</p></div>';
+  desk.appendChild(band);
+  // KPIs
+  const k=document.createElement("div");k.className="kpis";
+  ["BTC","ETH"].forEach(sym=>{const p=(m.prices||[]).find(x=>x.sym===sym)||{};
+    const v=isNum(p.price)?fmt(p.price)+(isNum(p.chg24h)?' <span class="chg '+dir(p.chg24h)+'" style="font-size:14px">'+sgn(p.chg24h)+'%</span>':""):'<span class="na">無可靠數據</span>';
+    k.appendChild(kpi(sym+" 價格",v,p.asOf||""))});
+  k.appendChild(kpi("恐懼貪婪指數",isNum(m.fearGreed)?fmt(m.fearGreed)+' <span style="font-size:13px;color:var(--muted)">'+fgLabel(m.fearGreed)+'</span>':'<span class="na">未取得</span>',"",isNum(m.fearGreed)?gauge(m.fearGreed):null));
+  const e=m.etf||{};
+  k.appendChild(kpi("現貨 ETF 淨流量（百萬美元）",isNum(e.btc)?'<span class="chg '+dir(e.btc)+'">'+sgn(e.btc,0)+'</span>':'<span class="na">未取得</span>',e.date?"交易日 "+e.date+(isNum(e.eth)?" · ETH "+sgn(e.eth,0):""):"",(isNum(e.btc)||isNum(e.eth))?flowBar(e.btc,e.eth):null));
+  const f=m.funding||{};
+  k.appendChild(kpi("資金費率（每 8h）",isNum(f.btc)?sgn(f.btc,4)+"%":'<span class="na">未取得</span>',isNum(f.eth)?"ETH "+sgn(f.eth,4)+"%"+(f.eth<0?"（空方付費）":""):""));
+  const ls=m.longShort||{};
+  k.appendChild(kpi("BTC 多空帳戶比",isNum(ls.btc)?fmt(ls.btc,1)+'<span style="font-size:13px;color:var(--muted)"> % 多</span>':'<span class="na">未取得</span>',isNum(m.liquidations24h)?"24h 清算 "+fmt(m.liquidations24h)+" 百萬美元":(isNum(m.oi?.btc)?"BTC OI "+fmt(m.oi.btc,2)+" 十億美元":""),isNum(ls.btc)?lsBar(ls.btc):null));
+  desk.appendChild(k);
+  if(m.readings?.kpis||true){const kp=document.createElement("div");kp.className="panel slim";kp.innerHTML="<h2><span>數據卡片</span></h2>";guideBtn(kp,"kpis");const rr=reading(m,"kpis");if(rr)kp.appendChild(rr);if(rr||true)desk.appendChild(kp)}
+  const kpn=klinePanel(m);if(kpn)desk.appendChild(kpn);
+  const cpn=causalPanel(m);if(cpn)desk.appendChild(cpn);
+  const ypn=yieldsPanel(m);if(ypn)desk.appendChild(ypn);
+  // ladder + scenarios | trends
+  const g=document.createElement("div");g.className="grid2";
+  const btc=(m.prices||[]).find(x=>x.sym==="BTC")?.price;
+  const lp=panel("BTC 關鍵價位與情境","圓點＝進場 · 虛線＝停損");guideBtn(lp,"ladder");
+  put(lp,ladder(m,btc),"這份報告沒有價位資料");{const rr=reading(m,"ladder");if(rr)lp.appendChild(rr)}
+  if((m.scenarios||[]).length){
+    const tw=document.createElement("div");tw.className="tblwrap";
+    tw.innerHTML='<table class="sc-table"><thead><tr><th>情境</th><th>觸發條件</th><th>進場</th><th>停損</th><th>T1／T2</th><th>風報比</th><th>試算 USDT</th></tr></thead><tbody>'+
+      m.scenarios.map((x,i)=>'<tr data-i="'+i+'"><td class="side '+esc(x.side)+'">'+esc(x.name)+'</td><td>'+esc(x.trigger||"")+'</td><td class="num">'+fmt(x.entry)+'</td><td class="num">'+fmt(x.stop)+'</td><td class="num">'+fmt(x.t1)+" / "+fmt(x.t2)+'</td><td class="num">'+fmt(x.rr1,1)+" / "+fmt(x.rr2,1)+'</td><td class="num"><span class="chg down">'+sgn(x.pnlStop,0)+'</span> · <span class="chg up">'+sgn(x.pnlT1,0)+" / "+sgn(x.pnlT2,0)+'</span></td></tr>').join("")+
+      '</tbody></table>';
+    lp.appendChild(tw);
+    const n=document.createElement("p");n.className="note";n.textContent="試算：100 USDT 保證金 × 20 倍＝名目 2,000 USDT；未計手續費、資金費、滑價與強平規則。盤整情境不進場。";lp.appendChild(n);
+  }
+  g.appendChild(lp);
+  const tp=panel("趨勢","跨報告累積");guideBtn(tp,"trends");
+  const tr=document.createElement("div");tr.className="trends";
+  const t1=document.createElement("div");t1.className="trend";t1.innerHTML="<h3>BTC 價格（各報告快照）</h3>";put(t1,lineChart(series("BTC"),{label:"BTC 價格走勢"}),"累積 2 份以上報告後顯示");
+  const t2=document.createElement("div");t2.className="trend";t2.innerHTML="<h3>BTC 現貨 ETF 淨流量（百萬美元）</h3>";put(t2,barChart(etfSeries(),{label:"ETF 淨流量"}),"尚無 ETF 數據");
+  const t3=document.createElement("div");t3.className="trend";t3.innerHTML="<h3>恐懼貪婪指數</h3>";put(t3,lineChart(seriesField(x=>x.fearGreed),{label:"恐懼貪婪指數",color:"--warn",band:[20,60]}),"累積 2 份以上報告後顯示");
+  tr.append(t1,t2,t3);tp.appendChild(tr);{const rr=reading(m,"trends");if(rr)tp.appendChild(rr)}g.appendChild(tp);
+  desk.appendChild(g);
+  // macro + checks + stocks
+  const g2=document.createElement("div");g2.className="grid2";
+  const left=document.createElement("div");left.style.display="grid";left.style.gap="16px";left.style.minWidth="0";
+  const mc=m.macro||{};
+  const items=[["10 年美債",mc.us10y,"%",2],["2 年美債",mc.us2y,"%",2],["美元指數",mc.dxy,"",2],["WTI 原油",mc.wti,"",2],["VIX",mc.vix,"",2],["12 月升息機率",mc.fedHikeProb,"%",1]].filter(x=>isNum(x[1]));
+  if(items.length){const mp=panel("總經儀表");guideBtn(mp,"macro");const box=document.createElement("div");box.className="macro";box.innerHTML=items.map(([k,v,u,d])=>'<div><span class="k">'+k+'</span><span class="v num">'+fmt(v,d)+u+'</span></div>').join("");mp.appendChild(box);{const rr=reading(m,"macro");if(rr)mp.appendChild(rr)}left.appendChild(mp)}
+  if((m.stocks||[]).length){const sp=panel("美股追蹤標的","前一交易日漲跌");guideBtn(sp,"stocks");put(sp,hbar(m.stocks),"沒有漲跌數據");{const rr=reading(m,"stocks");if(rr)sp.appendChild(rr)}left.appendChild(sp)}
+  if(left.children.length)g2.appendChild(left);
+  if((m.checks||[]).length){const cp=panel("前次驗證點回顧");guideBtn(cp,"checks");const ul=document.createElement("ul");ul.className="checks";ul.innerHTML=m.checks.map(c=>'<li><span class="st '+stClass(c.status)+'">'+esc(c.status)+'</span><span>'+esc(c.item)+'</span></li>').join("");cp.appendChild(ul);g2.appendChild(cp)}
+  if(g2.children.length)desk.appendChild(g2);
+  // full report
+  const rp=document.createElement("details");rp.className="panel report";rp.open=!r.metrics;
+  rp.innerHTML='<summary><h2><span>完整報告</span></h2><span class="tog">展開／收合</span></summary>';
+  const md=document.createElement("div");md.className="md";
+  md.innerHTML=DOMPurify.sanitize(marked.parse(r.markdown||""));
+  md.querySelectorAll("table").forEach(tb=>{const w=document.createElement("div");w.className="tbl";tb.replaceWith(w);w.appendChild(tb)});
+  md.querySelectorAll("a[href^='http']").forEach(a=>{a.target="_blank";a.rel="noopener"});
+  rp.appendChild(md);desk.appendChild(rp);
+  const n=document.createElement("p");n.className="note";n.textContent="價格為報告產出時的快照，非即時報價。建議操作為候選訊號，需自行判斷並手動下單；不是投資建議，不保證走勢或報酬。";desk.appendChild(n);
+}
+function fgLabel(v){return v<25?"極度恐懼":v<45?"恐懼":v<=55?"中性":v<=75?"貪婪":"極度貪婪"}
+function lsBar(p){const s=el("svg",{viewBox:"0 0 170 14",role:"img","aria-label":"多空比"});el("rect",{x:0,y:2,width:170,height:10,rx:5,fill:css("--down-x"),opacity:.75},s);el("rect",{x:0,y:2,width:170*p/100,height:10,rx:5,fill:css("--up-x")},s);return s}
+
+function pickFromHash(){const prev=state.current;const h=location.hash.replace(/^#r-/,"");const list=visible();state.current=list.some(r=>r.id===h)?h:(list[0]?.id||null);if(prev!==state.current)state.klineMode=null}
+function renderAll(){pickFromHash();renderIndex();
+  const cur=state.reports.find(x=>x.id===state.current);
+  if(state.static&&cur&&!cur.full){$("#desk").innerHTML='<div class="panel empty"><h2>載入報告中…</h2></div>';
+    fetch("data/reports/"+encodeURIComponent(cur.id)+".json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{Object.assign(cur,d,{full:true});if(state.current===cur.id)renderAll()}).catch(()=>{$("#desk").innerHTML='<div class="panel empty"><h2>讀取失敗</h2><p>找不到這份報告的資料檔。</p></div>'});return}
+  renderDesk();afterRender()}
+const RM=matchMedia("(prefers-reduced-motion: reduce)");
+let lastAnimated=null;
+function afterRender(force){
+  const desk=$("#desk");
+  [...desk.children].forEach((c,i)=>c.style.setProperty("--i",i));
+  desk.querySelectorAll(".ladder .scn").forEach((g,i)=>g.style.setProperty("--d",(i*0.18)+"s"));
+  desk.querySelectorAll(".draw").forEach(pth=>{try{pth.style.setProperty("--len",Math.ceil(pth.getTotalLength())+1)}catch(e){}});
+  const fresh=state.current&&(state.current!==lastAnimated||force);
+  if(fresh&&!RM.matches){desk.classList.remove("anim");void desk.offsetWidth;desk.classList.add("anim");countUp(desk)}
+  else desk.classList.remove("anim");
+  if(state.current)lastAnimated=state.current;
+  wireLadder(desk);wirePhases(desk);
+}
+function countUp(root){
+  const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT,{acceptNode:n=>n.parentElement.closest(".kpi .v, .macro .v, .hb-val")?NodeFilter.FILTER_ACCEPT:NodeFilter.FILTER_REJECT});
+  const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{const m=n.nodeValue.match(/^([^\d]*?)([\d,]+(?:\.\d+)?)(.*)$/s);if(!m)return;
+    const target=parseFloat(m[2].replace(/,/g,""));if(!isFinite(target))return;
+    const dec=(m[2].split(".")[1]||"").length,comma=m[2].includes(","),t0=performance.now(),dur=900;
+    const show=v=>{const s=comma||target>=1000?v.toLocaleString("en-US",{minimumFractionDigits:dec,maximumFractionDigits:dec}):v.toFixed(dec);n.nodeValue=m[1]+s+m[3]};
+    const tick=t=>{const k=Math.min(1,(t-t0)/dur),e=1-Math.pow(1-k,3);show(target*e);if(k<1)requestAnimationFrame(tick);else n.nodeValue=m[0]};
+    show(0);requestAnimationFrame(tick)});
+}
+function wireLadder(root){
+  const svg=root.querySelector(".ladder");if(!svg)return;
+  const rows=root.querySelectorAll(".sc-table tr[data-i]");
+  const focus=i=>{svg.classList.toggle("focus",i!=null);svg.querySelectorAll(".scn").forEach(g=>g.classList.toggle("on",g.dataset.i==i));rows.forEach(r=>r.classList.toggle("on",r.dataset.i==i))};
+  rows.forEach(r=>{r.addEventListener("mouseenter",()=>focus(r.dataset.i));r.addEventListener("mouseleave",()=>focus(null));r.addEventListener("click",()=>focus(svg.classList.contains("focus")&&r.classList.contains("on")?null:r.dataset.i))});
+  svg.querySelectorAll(".scn").forEach(g=>{g.addEventListener("mouseenter",()=>focus(g.dataset.i));g.addEventListener("mouseleave",()=>focus(null))});
+}
+/* tooltip */
+const tip=document.createElement("div");tip.className="tip";tip.setAttribute("role","status");document.body.appendChild(tip);
+function showTip(e,t){tip.textContent=t;tip.style.left=e.clientX+"px";tip.style.top=e.clientY+"px";tip.classList.add("on")}
+document.addEventListener("pointerover",e=>{const h=e.target.closest?.("[data-tip]");if(h){showTip(e,h.dataset.tip);const pt=h.previousElementSibling;if(pt?.classList.contains("pt"))pt.setAttribute("r",6)}});
+document.addEventListener("pointermove",e=>{if(tip.classList.contains("on")&&e.target.closest?.("[data-tip]")){tip.style.left=e.clientX+"px";tip.style.top=e.clientY+"px"}});
+document.addEventListener("pointerout",e=>{const h=e.target.closest?.("[data-tip]");if(h){tip.classList.remove("on");const pt=h.previousElementSibling;if(pt?.classList.contains("pt"))pt.setAttribute("r",pt.classList.contains("lastpt")?4:2.5)}});
+/* next report countdown */
+function nextReport(){
+  const now=new Date(),tp=new Date(now.toLocaleString("en-US",{timeZone:"Asia/Taipei"}));
+  const slots=[[7,55,"早報"],[20,52,"晚報＋美股"]];
+  for(let d=0;d<2;d++)for(const [h,mi,n] of slots){const t=new Date(tp);t.setDate(tp.getDate()+d);t.setHours(h,mi,0,0);if(t>tp)return {n,h,mi,diff:t-tp}}
+}
+function updateNext(){const r=nextReport();if(!r)return;const m=Math.round(r.diff/60000),hh=Math.floor(m/60),mm=m%60;
+  $("#next").innerHTML='下一份 <b>'+r.n+'</b> '+String(r.h).padStart(2,"0")+":"+String(r.mi).padStart(2,"0")+" · "+(hh?hh+" 小時 ":"")+mm+" 分後"}
+updateNext();setInterval(updateNext,30000);
+/* new report toast */
+const toast=document.createElement("div");toast.className="toast";toast.setAttribute("role","status");toast.innerHTML='<span id="toast-t"></span><button type="button" id="toast-b">查看</button>';document.body.appendChild(toast);
+let toastTimer;function notify(r){$("#toast-t").textContent="新的"+(KIND[r.kind]||"報告")+"送達："+r.date;toast.classList.add("on");$("#toast-b").onclick=()=>{toast.classList.remove("on");location.hash="r-"+r.id};clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("on"),9000)}
+
+function setPressed(sel,attr,val){document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",x.dataset[attr]===val?"true":"false"))}
+document.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{state.filter=b.dataset.k;setPressed("[data-k]","k",state.filter);try{localStorage.setItem("filter",state.filter)}catch(e){}if(location.hash)history.replaceState(null,"",location.pathname+location.search);renderAll()}));
+try{const f=localStorage.getItem("filter");if(f==="all"||KIND[f]){state.filter=f;setPressed("[data-k]","k",f)}}catch(e){}
+window.addEventListener("hashchange",()=>{renderAll();window.scrollTo({top:0})});
+matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change",()=>{renderDesk();afterRender()});
+new MutationObserver(()=>{renderDesk();afterRender()}).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+(async()=>{
+  const db=window.claude?await window.claude.use("db"):null;
+  if(!db){
+    try{const r=await fetch("data/index.json",{cache:"no-cache"});if(!r.ok)throw new Error(r.status);const idx=await r.json();
+      state.static=true;state.reports=(idx.reports||[]).slice().sort((a,b)=>a.sortKey<b.sortKey?1:-1);state.loaded=true;
+      const getLive=()=>fetch("data/live.json",{cache:"no-cache"}).then(r=>r.ok?r.json():null).then(d=>{if(d){state.live=d;renderDesk();afterRender()}}).catch(()=>{});
+      renderAll();getLive();setInterval(getLive,10*60*1000)}
+    catch(e){state.loaded=true;$("#desk").innerHTML='<div class="panel empty"><h2>無法讀取日報</h2><p>在 claude.ai 開啟需要登入；在其他網址開啟時找不到 data/index.json。</p></div>'}
+    return}
+  const timer=setTimeout(()=>{if(!state.loaded)$("#desk").innerHTML='<div class="panel empty"><h2>暫時連不上資料</h2><p>網路恢復後會自動顯示。</p></div>'},10000);
+  db.doc("live/market").onSnapshot(s=>{if(s.exists){state.live=s.data();if(state.loaded){renderDesk();afterRender()}}},()=>{});
+  db.collection("reports").orderBy("sortKey","desc").limit(200).onSnapshot(snap=>{
+    if(!snap.metadata.fromCache){clearTimeout(timer);state.loaded=true}
+    const before=new Set(state.reports.map(r=>r.id)),hadData=state.reports.length>0&&!snap.metadata.fromCache;
+    state.reports=snap.docs.map(d=>({id:d.id,...d.data()}));
+    if(hadData){const nw=state.reports.find(r=>!before.has(r.id));if(nw)notify(nw)}
+    renderAll();
+  },err=>{clearTimeout(timer);state.loaded=true;$("#desk").innerHTML='<div class="panel empty"><h2>讀取失敗</h2><p>錯誤代碼：'+esc(err.code)+'</p></div>'});
+})();
+</script>
