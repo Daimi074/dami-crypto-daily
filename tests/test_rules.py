@@ -33,6 +33,7 @@ class Indicators(unittest.TestCase):
             x = [200 + i * sign for i in range(120)]
             c = dict(
                 c=x,
+                o=x,
                 h=[p + 1 for p in x],
                 l=[p - 1 for p in x],
                 v=[1] * 120,
