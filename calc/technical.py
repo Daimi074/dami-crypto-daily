@@ -51,6 +51,8 @@ def indicators(values):
 
 
 def structure(c):
+    if len({len(c[k]) for k in "tohlcv"}) != 1:
+        raise ValueError("K 線時間與價量筆數不符")
     if len(c["t"]) < 90 or any(b - a != 14400000 for a, b in zip(c["t"], c["t"][1:])):
         raise ValueError("4H K 線不足或不連續")
     ind = indicators(c["c"])

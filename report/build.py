@@ -104,8 +104,18 @@ def build(kind, live, yields, now):
         )
     m["deriv"] = d
     c = m["candles"]
-    if c and not c["lastOpen"]:
-        m["trend"], m["indicators"], phases = structure(c)
+    if c and c.get("lastOpen"):
+        c = {**c, **{key: c[key][:-1] for key in "tohlcv"}, "lastOpen": False}
+        m["candles"] = c
+    if c:
+        try:
+            m["trend"], m["indicators"], phases = structure(c)
+        except ValueError as error:
+            c = m["candles"] = None
+            m["dataQuality"].append(
+                dict(field="candles", status="missing", note=str(error))
+            )
+    if c:
         m["klineStory"] = {
             "summary": "",
             "phases": [
@@ -194,6 +204,18 @@ def build(kind, live, yields, now):
                 note="官方日值超過四個日曆日，請核對休市日或來源延遲。",
             )
         )
+    for x in m["indices"]:
+        if (
+            x.get("asOf")
+            and (now.date() - datetime.fromisoformat(x["asOf"]).date()).days > 4
+        ):
+            m["dataQuality"].append(
+                dict(
+                    field="indices",
+                    status="stale",
+                    note=x["sym"] + " 最新日值 " + x["asOf"] + "，請核對交易日。",
+                )
+            )
     sections = COMMON[:-1] + [section(now.date(), kind)] + COMMON[-1:]
     return dict(
         date=date,

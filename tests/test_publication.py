@@ -48,7 +48,7 @@ class Publishing(TestCase):
         from unittest.mock import patch
         from tempfile import TemporaryDirectory
 
-        snapshot = read(ROOT / "data/live.json")
+        snapshot = read(ROOT / "reports/2026-11-19-evening.json")["metrics"]
         with TemporaryDirectory() as tmp:
             dest = Path(tmp) / "live.json"
             with patch("sys.argv", ["live", str(dest)]), patch.object(
