@@ -94,7 +94,21 @@
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "btc": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "eth": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "yields": {
           "type": [
@@ -106,25 +120,117 @@
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "btc": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "eth": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "funding": {
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "btc": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "eth": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "oi": {
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "btc": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "chg24h": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "macro": {
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "us2y": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "us10y": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "spread": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "dxy": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "wti": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "gold": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "vix": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "fedHikeProb": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "earnings": {
           "type": [
@@ -142,19 +248,133 @@
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "total": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "long": {
+              "type": [
+                "number",
+                "null"
+              ]
+            },
+            "short": {
+              "type": [
+                "number",
+                "null"
+              ]
+            }
+          }
         },
         "candles": {
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "o": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "h": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "l": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "c": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "t": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            },
+            "v": {
+              "type": "array",
+              "items": {
+                "type": "number"
+              }
+            }
+          }
         },
         "indicators": {
           "type": [
             "object",
             "null"
-          ]
+          ],
+          "properties": {
+            "ema20": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "ema50": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "bbUpper": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "bbMid": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "bbLower": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "rsi14": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
         },
         "klineStory": {
           "type": [
@@ -172,19 +392,123 @@
           "type": "array"
         },
         "stocks": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sym"
+            ],
+            "properties": {
+              "sym": {
+                "type": "string"
+              },
+              "close": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "chg": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ext": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ma20": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "ma50": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
         },
         "indices": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sym"
+            ],
+            "properties": {
+              "sym": {
+                "type": "string"
+              },
+              "close": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "chg": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
         },
         "checks": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "item",
+              "status"
+            ],
+            "properties": {
+              "item": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "成立",
+                  "不成立",
+                  "觸發",
+                  "未觸發",
+                  "失效",
+                  "待定",
+                  "延後"
+                ]
+              }
+            }
+          }
         },
         "events": {
           "type": "array"
         },
         "cryptoStocks": {
-          "type": "array"
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sym"
+            ],
+            "properties": {
+              "sym": {
+                "type": "string"
+              },
+              "chg": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
         },
         "causal": {
           "type": "array"
@@ -291,6 +615,31 @@
                   "partial"
                 ]
               }
+            }
+          }
+        },
+        "correction": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "required": [
+            "previous",
+            "newData",
+            "revised"
+          ],
+          "properties": {
+            "previous": {
+              "type": "string",
+              "minLength": 1
+            },
+            "newData": {
+              "type": "string",
+              "minLength": 1
+            },
+            "revised": {
+              "type": "string",
+              "minLength": 1
             }
           }
         }

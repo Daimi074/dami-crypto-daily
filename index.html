@@ -661,12 +661,14 @@ function liveBand(){
   (L.prices||[]).forEach(x=>{const d=document.createElement("div");d.className="lb-i";
     d.innerHTML='<span class="k">'+esc(x.sym)+'</span><span class="v num">'+fmt(x.price,x.price>1000?0:2)+' <span class="chg '+dir(x.chg24h)+'">'+sgn(x.chg24h,2)+'%</span></span><span class="s num">24h '+fmt(x.low,x.low>1000?0:1)+' – '+fmt(x.high,x.high>1000?0:1)+'</span>';
     if(x.sym==="BTC"&&L.candles?.c){const sp=spark(L.candles.c.slice(-7));if(sp)d.appendChild(sp)}
+    for(const q of (L.dataQuality||[]).filter(q=>q.field===x.sym)){const warn=document.createElement("small");warn.textContent=q.note;d.append(warn)}
     row.appendChild(d)});
   const item=(k,v,s)=>{const d=document.createElement("div");d.className="lb-i";d.innerHTML='<span class="k">'+k+'</span><span class="v num">'+v+'</span>'+(s?'<span class="s">'+s+'</span>':"");row.appendChild(d)};
   const fg=L.fearGreed;if(fg)item("恐懼貪婪",fmt(fg.value)+' <small>'+esc(fg.label)+'</small>',"前一日 "+fmt(fg.prev));
   const fu=L.funding;if(fu)item("資金費率（8h）",sgn(fu.btc,4)+"%","ETH "+sgn(fu.eth,4)+"% · OKX");
   const ls=L.longShort;if(ls)item("BTC 多方帳戶",fmt(ls.btc,1)+"%","多空比 "+fmt(ls.ratio,2)+" · OKX");
   const o=L.oi;if(o)item("BTC 未平倉",fmt(o.btcUsdBn,2)+" <small>十億美元</small>","OKX 永續");
+  for(const q of (L.dataQuality||[]).filter(q=>q.status==="missing"))item(esc(q.field),"未取得",esc(q.note));
   p.appendChild(row);
   if(L.errors?.length){const n=document.createElement("p");n.className="note";n.textContent="部分資料這次沒取到："+L.errors.map(e=>e.split(":")[0]).join("、");p.appendChild(n)}
   return p;
@@ -703,12 +705,13 @@ function renderDesk(){
   desk.appendChild(band);
   const summary=document.createElement("p");
   summary.textContent="趨勢方向："+(m.trend||"未取得")+"　"+(r.kind==="morning"?"今日":"今晚")+"動作："+(m.action||st)+"　QQQ："+(m.qqqSwitch||"未取得");
-  band.appendChild(summary);
-  const nav=document.createElement("nav"),pos=state.reports.indexOf(r);
+  summary.style.gridColumn="1 / -1";summary.style.margin="0";band.appendChild(summary);
+  const nav=document.createElement("nav"),sequence=visible(),pos=sequence.indexOf(r);
   for(const [i,label] of [[pos+1,"上一份"],[pos-1,"下一份"]]){
-    if(state.reports[i]){const link=document.createElement("a");link.href="#r-"+state.reports[i].id;link.textContent=label;nav.append(link,"　")}
+    if(sequence[i]){const link=document.createElement("a");link.href="#r-"+sequence[i].id;link.textContent=label;nav.append(link,"　")}
   }
   desk.append(nav);
+  if(r.title?.includes("時點重建")){const n=document.createElement("small");n.textContent="時點重建 · 行情截點 "+when(r.marketAsOf)+"，事後依原始快照製作。";band.append(n)}
   // KPIs
   const k=document.createElement("div");k.className="kpis";
   ["BTC","ETH"].forEach(sym=>{const p=(m.prices||[]).find(x=>x.sym===sym)||{};
@@ -758,7 +761,7 @@ function renderDesk(){
   const g2=document.createElement("div");g2.className="grid2";
   const left=document.createElement("div");left.style.display="grid";left.style.gap="16px";left.style.minWidth="0";
   const mc=m.macro||{};
-  const items=[["10 年美債",mc.us10y,"%",2],["2 年美債",mc.us2y,"%",2],["美元指數",mc.dxy,"",2],["WTI 原油",mc.wti,"",2],["VIX",mc.vix,"",2],["12 月升息機率",mc.fedHikeProb,"%",1]].filter(x=>isNum(x[1]));
+  const items=[["10 年美債",mc.us10y,"%",2],["2 年美債",mc.us2y,"%",2],["美元指數",mc.dxy,"",2],["WTI 原油",mc.wti,"",2],["VIX",mc.vix,"",2],["Fed 升息機率",mc.fedHikeProb,"%",1]].filter(x=>isNum(x[1]));
   if(items.length){const mp=panel("總經儀表");guideBtn(mp,"macro");const box=document.createElement("div");box.className="macro";box.innerHTML=items.map(([k,v,u,d])=>'<div><span class="k">'+k+'</span><span class="v num">'+fmt(v,d)+u+'</span></div>').join("");mp.appendChild(box);{const rr=reading(m,"macro");if(rr)mp.appendChild(rr)}left.appendChild(mp)}
   if((m.stocks||[]).length){const sp=panel("美股追蹤標的","前一交易日漲跌");guideBtn(sp,"stocks");put(sp,hbar(m.stocks),"沒有漲跌數據");{const rr=reading(m,"stocks");if(rr)sp.appendChild(rr)}left.appendChild(sp)}
   if(left.children.length)g2.appendChild(left);
@@ -772,6 +775,11 @@ function renderDesk(){
     assets.append(grid);const note=reading(m,"stocks");if(note)assets.append(note);desk.append(assets);
   }
   // full report
+  if(m.dataQuality?.length){
+    const quality=panel("資料缺口");for(const q of m.dataQuality.filter(x=>x.status!=="ok")){
+      const line=document.createElement("p");line.textContent=q.note;quality.append(line)
+    }desk.append(quality);
+  }
   const rp=document.createElement("details");rp.className="panel report";rp.open=!r.metrics;
   rp.innerHTML='<summary><h2><span>完整報告</span></h2><span class="tog">展開／收合</span></summary>';
   const md=document.createElement("div");md.className="md";

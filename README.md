@@ -12,6 +12,7 @@
 python -m pip install -r requirements.txt
 python -m fetch.live data/live.json
 python -m fetch.treasury
+python -m fetch.indices
 python -m fetch.headlines
 python -m report.build --kind morning
 ```

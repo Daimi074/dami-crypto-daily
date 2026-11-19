@@ -24,6 +24,8 @@ jobs:
       - name: 更新殖利率，失敗時保留原始資料日期
         run: python -m fetch.treasury
         continue-on-error: true
+      - run: python -m fetch.indices
+        continue-on-error: true
       - run: python -m fetch.headlines
       - env:
           KIND: ${{ inputs.kind || (github.event.schedule == '55 23 * * *' && 'morning' || 'evening') }}
