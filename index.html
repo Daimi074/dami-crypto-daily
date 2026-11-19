@@ -696,7 +696,7 @@ function renderDesk(){
   if(!r){desk.innerHTML='<div class="panel empty"><h2>'+(state.loaded?"還沒有日報":"正在載入日報…")+'</h2><p>每天早上 07:55 會有加密早報，晚上 20:52 會有加密＋美股晚報，產出後自動出現在這裡。</p></div>';return}
   const m=r.metrics||{};
   // stance band
-  const lb=liveBand();if(lb)desk.appendChild(lb);
+  const lb=liveBand();
   const band=document.createElement("div");band.className="panel stance";
   const st=m.stance||"—";
   band.innerHTML='<div class="verdict '+stanceClass(st)+'"><span class="lbl">'+(r.kind==="evening"?"今晚主建議":"今日主建議")+'</span><span class="v">'+esc(st)+'</span></div>'+
@@ -704,13 +704,13 @@ function renderDesk(){
     (m.qqqSwitch?'<span class="qqq '+(m.qqqSwitch==="開"?"on":"off")+'">QQQ 風險開關：'+esc(m.qqqSwitch)+'</span>':"")+'</div><p class="lede">'+esc(r.headline||"")+'</p></div>';
   desk.appendChild(band);
   const summary=document.createElement("p");
-  summary.textContent="趨勢方向："+(m.trend||"未取得")+"　"+(r.kind==="morning"?"今日":"今晚")+"動作："+(m.action||st)+"　QQQ："+(m.qqqSwitch||"未取得");
+  summary.textContent="趨勢方向："+(m.trend||"未取得")+"　"+(r.kind==="morning"?"今日":"今晚")+"動作："+(m.action||st);
   summary.style.gridColumn="1 / -1";summary.style.margin="0";band.appendChild(summary);
   const nav=document.createElement("nav"),sequence=visible(),pos=sequence.indexOf(r);
   for(const [i,label] of [[pos+1,"上一份"],[pos-1,"下一份"]]){
     if(sequence[i]){const link=document.createElement("a");link.href="#r-"+sequence[i].id;link.textContent=label;nav.append(link,"　")}
   }
-  desk.append(nav);
+  desk.append(nav);if(lb)desk.appendChild(lb);
   if(r.title?.includes("時點重建")){const n=document.createElement("small");n.textContent="時點重建 · 行情截點 "+when(r.marketAsOf)+"，事後依原始快照製作。";band.append(n)}
   // KPIs
   const k=document.createElement("div");k.className="kpis";
