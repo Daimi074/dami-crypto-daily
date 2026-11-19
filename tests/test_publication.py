@@ -12,6 +12,14 @@ from calc.technical import TPE
 
 
 class Publishing(TestCase):
+    def test_weekend_holiday(self):
+        from datetime import date
+        from report.calendar import section
+
+        self.assertIn("準備方案", section(date(2026, 11, 26), "evening"))
+        self.assertIn("上週", section(date(2026, 11, 23), "morning"))
+        self.assertIn("盤前", section(date(2026, 11, 19), "evening"))
+
     def test_public_files(self):
         check()
 

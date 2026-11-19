@@ -4,6 +4,7 @@ import argparse
 import json
 from datetime import datetime
 from pathlib import Path
+from report.calendar import section
 from calc.technical import TPE, iso, structure
 from fetch.storage import ROOT, write
 
@@ -193,15 +194,7 @@ def build(kind, live, yields, now):
                 note="官方日值超過四個日曆日，請核對休市日或來源延遲。",
             )
         )
-    sections = (
-        COMMON[:-1]
-        + (
-            ["前一交易日收盤、TSM ADR 與昨晚 BTC"]
-            if kind == "morning"
-            else ["盤前與自早報以來變化、日間 BTC"]
-        )
-        + COMMON[-1:]
-    )
+    sections = COMMON[:-1] + [section(now.date(), kind)] + COMMON[-1:]
     return dict(
         date=date,
         kind=kind,
