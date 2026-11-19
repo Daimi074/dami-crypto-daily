@@ -261,6 +261,7 @@ details.report>summary .tog{font-size:12px;color:var(--accent)}
   </div>
   <div class="tools">
     <span class="live" id="live" aria-live="polite"><i class="pulse"></i><span id="next">同步中…</span></span>
+    <label>日期 <input type="date" style="max-width:9em" id="report-date"></label>
     <div class="seg" role="group" aria-label="報告類型">
       <button id="f-all" data-k="all" aria-pressed="true">全部</button>
       <button id="f-am" data-k="morning" aria-pressed="false">早報</button>
@@ -276,8 +277,8 @@ details.report>summary .tog{font-size:12px;color:var(--accent)}
   </section>
 </div></main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script src="assets/vendor/marked.js"></script>
+<script src="assets/vendor/dompurify.js"></script>
 <script>
 const KIND={morning:"早報",evening:"晚報＋美股"};
 const state={reports:[],filter:"all",current:null,loaded:false};
@@ -292,7 +293,7 @@ function weekday(d){const t=new Date(d+"T12:00:00+08:00");return isNaN(t)?"":"�
 function when(iso){try{return new Date(iso).toLocaleString("zh-TW",{timeZone:"Asia/Taipei",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false})}catch(e){return iso||""}}
 const css=n=>getComputedStyle(document.body).getPropertyValue(n).trim();
 
-function visible(){return state.reports.filter(r=>state.filter==="all"||r.kind===state.filter)}
+function visible(){return state.reports.filter(r=>(!state.date||r.date===state.date)&&(state.filter==="all"||r.kind===state.filter))}
 
 function renderIndex(){
   const byDay=new Map();
@@ -574,6 +575,7 @@ function yieldAnalysis(Y){
   if(d2>0&&d10>0)shape=d2>d10?"熊平：短端上升比長端快，市場在定價 Fed 可能再升息":"熊陡：長端上升比短端快，市場擔心通膨或政府發債量";
   else if(d2<0&&d10<0)shape=d2<d10?"牛陡：短端下降比長端快，市場開始預期降息":"牛平：長端下降比短端快，資金躲進長債避險";
   else shape=d10>0?"長端上升、短端下降，曲線變陡":"長端下降、短端上升，曲線變平";
+  if(Y.monthly?.shape)shape=Y.monthly.shape;
   const tone=Y.y10[n]>=Y.y10[k]?"對成長股與 BTC 的估值是壓力":"對成長股與 BTC 的估值壓力減輕";
   return {n,k,p,d10,d2,sp,spAgo,text:"10 年債 "+fmt(Y.y10[n],2)+"%，一個月 "+bp(d10)+"；2 年債 "+fmt(Y.y2[n],2)+"%，一個月 "+bp(d2)+"。過去一個月是「"+shape+"」，"+tone+"。10 年－2 年利差 "+bp(sp)+"（一個月前 "+bp(spAgo)+"），"+(sp>=0?"維持正斜率":"仍在倒掛")+"。"};
 }
@@ -653,8 +655,8 @@ function spark(vals){if(!vals||vals.length<2)return null;const W=120,H=34,lo=Mat
 function liveBand(){
   const L=state.live;if(!L||!L.updatedAt)return null;
   const p=document.createElement("div");p.className="panel liveband";
-  const mins=(Date.now()-Date.parse(L.updatedAt))/60000,stale=mins>130;
-  p.innerHTML='<div class="lb-h"><span class="lb-t"><i class="pulse'+(stale?" off":"")+'"></i>最新行情</span><span class="lb-s">每小時更新 · '+esc(when(L.updatedAt))+'（'+esc(agoText(L.updatedAt))+'）'+(stale?' · <b class="stale">資料超過 2 小時未更新</b>':"")+'</span></div>';
+  const mins=(Date.now()-Date.parse(L.updatedAt))/60000,stale=mins>120;
+  p.innerHTML='<div class="lb-h"><span class="lb-t"><i class="pulse'+(stale?" off":"")+'"></i>最新行情</span><span class="lb-s">每小時更新 · '+esc(when(L.updatedAt))+'（'+Math.max(0,Math.floor(mins))+" 分鐘前更新"+'）'+(mins>360?' · <b style="color:var(--down-x)">資料過期</b>':stale?' · <b class="stale">資料超過 2 小時未更新</b>':"")+'</span></div>';
   const row=document.createElement("div");row.className="lb-row";
   (L.prices||[]).forEach(x=>{const d=document.createElement("div");d.className="lb-i";
     d.innerHTML='<span class="k">'+esc(x.sym)+'</span><span class="v num">'+fmt(x.price,x.price>1000?0:2)+' <span class="chg '+dir(x.chg24h)+'">'+sgn(x.chg24h,2)+'%</span></span><span class="s num">24h '+fmt(x.low,x.low>1000?0:1)+' – '+fmt(x.high,x.high>1000?0:1)+'</span>';
@@ -699,6 +701,14 @@ function renderDesk(){
     '<div><div class="meta"><span class="chip '+esc(r.kind)+'">'+esc(KIND[r.kind]||r.kind)+'</span><span class="num">'+esc(r.date)+" "+weekday(r.date)+(r.updatedAt?" · 產出 "+esc(when(r.updatedAt)):"")+'</span>'+
     (m.qqqSwitch?'<span class="qqq '+(m.qqqSwitch==="開"?"on":"off")+'">QQQ 風險開關：'+esc(m.qqqSwitch)+'</span>':"")+'</div><p class="lede">'+esc(r.headline||"")+'</p></div>';
   desk.appendChild(band);
+  const summary=document.createElement("p");
+  summary.textContent="趨勢方向："+(m.trend||"未取得")+"　"+(r.kind==="morning"?"今日":"今晚")+"動作："+(m.action||st)+"　QQQ："+(m.qqqSwitch||"未取得");
+  band.appendChild(summary);
+  const nav=document.createElement("nav"),pos=state.reports.indexOf(r);
+  for(const [i,label] of [[pos+1,"上一份"],[pos-1,"下一份"]]){
+    if(state.reports[i]){const link=document.createElement("a");link.href="#r-"+state.reports[i].id;link.textContent=label;nav.append(link,"　")}
+  }
+  desk.append(nav);
   // KPIs
   const k=document.createElement("div");k.className="kpis";
   ["BTC","ETH"].forEach(sym=>{const p=(m.prices||[]).find(x=>x.sym===sym)||{};
@@ -711,6 +721,13 @@ function renderDesk(){
   k.appendChild(kpi("資金費率（每 8h）",isNum(f.btc)?sgn(f.btc,4)+"%":'<span class="na">未取得</span>',isNum(f.eth)?"ETH "+sgn(f.eth,4)+"%"+(f.eth<0?"（空方付費）":""):""));
   const ls=m.longShort||{};
   k.appendChild(kpi("BTC 多空帳戶比",isNum(ls.btc)?fmt(ls.btc,1)+'<span style="font-size:13px;color:var(--muted)"> % 多</span>':'<span class="na">未取得</span>',isNum(m.liquidations24h)?"24h 清算 "+fmt(m.liquidations24h)+" 百萬美元":(isNum(m.oi?.btc)?"BTC OI "+fmt(m.oi.btc,2)+" 十億美元":""),isNum(ls.btc)?lsBar(ls.btc):null));
+  for(const [field,label,value] of [["oi","部分交易所 OI（十億美元）",m.oi?.btc],["liquidations24h","BTC 清算（百萬美元）",m.liquidations24h?.total]]){
+    k.appendChild(kpi(label,isNum(value)?fmt(value,2):"未取得",field==="oi"?(m.oi?.scope||"範圍未核實"):(m.liquidations24h?.scope||"範圍未核實")));
+  }
+  const fields=["prices","prices","fearGreed","etf","funding","longShort","oi","liquidations24h"];
+  [...k.children].forEach((card,i)=>{for(const q of (m.dataQuality||[]).filter(q=>q.field===fields[i]&&q.status!=="ok")){
+    const note=document.createElement("p");note.textContent=({missing:"缺資料",stale:"資料過期",partial:"範圍有限"})[q.status]+" · "+q.note;card.append(note);
+  }});
   desk.appendChild(k);
   if(m.readings?.kpis||true){const kp=document.createElement("div");kp.className="panel slim";kp.innerHTML="<h2><span>數據卡片</span></h2>";guideBtn(kp,"kpis");const rr=reading(m,"kpis");if(rr)kp.appendChild(rr);if(rr||true)desk.appendChild(kp)}
   const kpn=klinePanel(m);if(kpn)desk.appendChild(kpn);
@@ -727,7 +744,7 @@ function renderDesk(){
       m.scenarios.map((x,i)=>'<tr data-i="'+i+'"><td class="side '+esc(x.side)+'">'+esc(x.name)+'</td><td>'+esc(x.trigger||"")+'</td><td class="num">'+fmt(x.entry)+'</td><td class="num">'+fmt(x.stop)+'</td><td class="num">'+fmt(x.t1)+" / "+fmt(x.t2)+'</td><td class="num">'+fmt(x.rr1,1)+" / "+fmt(x.rr2,1)+'</td><td class="num"><span class="chg down">'+sgn(x.pnlStop,0)+'</span> · <span class="chg up">'+sgn(x.pnlT1,0)+" / "+sgn(x.pnlT2,0)+'</span></td></tr>').join("")+
       '</tbody></table>';
     lp.appendChild(tw);
-    const n=document.createElement("p");n.className="note";n.textContent="試算：100 USDT 保證金 × 20 倍＝名目 2,000 USDT；未計手續費、資金費、滑價與強平規則。盤整情境不進場。";lp.appendChild(n);
+    const n=document.createElement("p");n.className="note";n.textContent="試算：全倉 100 × 20＝2,000 USDT，半倉 50 × 20＝1,000 USDT；未計手續費、資金費、滑價與強平規則。盤整情境不進場。";lp.appendChild(n);
   }
   g.appendChild(lp);
   const tp=panel("趨勢","跨報告累積");guideBtn(tp,"trends");
@@ -735,7 +752,7 @@ function renderDesk(){
   const t1=document.createElement("div");t1.className="trend";t1.innerHTML="<h3>BTC 價格（各報告快照）</h3>";put(t1,lineChart(series("BTC"),{label:"BTC 價格走勢"}),"累積 2 份以上報告後顯示");
   const t2=document.createElement("div");t2.className="trend";t2.innerHTML="<h3>BTC 現貨 ETF 淨流量（百萬美元）</h3>";put(t2,barChart(etfSeries(),{label:"ETF 淨流量"}),"尚無 ETF 數據");
   const t3=document.createElement("div");t3.className="trend";t3.innerHTML="<h3>恐懼貪婪指數</h3>";put(t3,lineChart(seriesField(x=>x.fearGreed),{label:"恐懼貪婪指數",color:"--warn",band:[20,60]}),"累積 2 份以上報告後顯示");
-  tr.append(t1,t2,t3);tp.appendChild(tr);{const rr=reading(m,"trends");if(rr)tp.appendChild(rr)}g.appendChild(tp);
+  const history=document.createElement("p");history.textContent=state.reports.slice(0,10).reverse().map(x=>x.date.slice(5)+" "+(x.kind==="morning"?"早":"晚")+" "+(x.metrics?.trend||"—")+"／"+(x.metrics?.stance||"—")).join(" → ");tr.append(t1,t2,t3,history);tp.appendChild(tr);{const rr=reading(m,"trends");if(rr)tp.appendChild(rr)}g.appendChild(tp);
   desk.appendChild(g);
   // macro + checks + stocks
   const g2=document.createElement("div");g2.className="grid2";
@@ -747,6 +764,13 @@ function renderDesk(){
   if(left.children.length)g2.appendChild(left);
   if((m.checks||[]).length){const cp=panel("前次驗證點回顧");guideBtn(cp,"checks");const ul=document.createElement("ul");ul.className="checks";ul.innerHTML=m.checks.map(c=>'<li><span class="st '+stClass(c.status)+'">'+esc(c.status)+'</span><span>'+esc(c.item)+'</span></li>').join("");cp.appendChild(ul);g2.appendChild(cp)}
   if(g2.children.length)desk.appendChild(g2);
+  if(m.indices || m.sectors || m.cryptoStocks){
+    const assets=panel("股票、指數與類股","漲跌按交易日比較");
+    const grid=document.createElement("div");grid.className="tbl";
+    const rows=[...(m.indices||[]),...(m.sectors?.strong||[]),...(m.sectors?.weak||[]),...(m.cryptoStocks||[])];
+    grid.innerHTML="<table><thead><tr><th>代號</th><th>收盤</th><th>漲跌 %</th></tr></thead><tbody>"+rows.map(x=>"<tr><td>"+esc(x.sym)+"</td><td>"+fmt(x.close,2)+"</td><td>"+sgn(x.chg,2)+"</td></tr>").join("")+"</tbody></table>";
+    assets.append(grid);const note=reading(m,"stocks");if(note)assets.append(note);desk.append(assets);
+  }
   // full report
   const rp=document.createElement("details");rp.className="panel report";rp.open=!r.metrics;
   rp.innerHTML='<summary><h2><span>完整報告</span></h2><span class="tog">展開／收合</span></summary>';
@@ -764,7 +788,7 @@ function pickFromHash(){const prev=state.current;const h=location.hash.replace(/
 function renderAll(){pickFromHash();renderIndex();
   const cur=state.reports.find(x=>x.id===state.current);
   if(state.static&&cur&&!cur.full){$("#desk").innerHTML='<div class="panel empty"><h2>載入報告中…</h2></div>';
-    fetch("data/reports/"+encodeURIComponent(cur.id)+".json",{cache:"no-cache"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{Object.assign(cur,d,{full:true});if(state.current===cur.id)renderAll()}).catch(()=>{$("#desk").innerHTML='<div class="panel empty"><h2>讀取失敗</h2><p>找不到這份報告的資料檔。</p></div>'});return}
+    fetch(cur.path||("data/reports/"+encodeURIComponent(cur.id)+".json"),{cache:"no-cache"}).then(r=>{if(!r.ok)throw 0;return r.json()}).then(d=>{Object.assign(cur,d,{full:true});if(state.current===cur.id)renderAll()}).catch(()=>{$("#desk").innerHTML='<div class="panel empty"><h2>讀取失敗</h2><p>找不到這份報告的資料檔。</p></div>'});return}
   renderDesk();afterRender()}
 const RM=matchMedia("(prefers-reduced-motion: reduce)");
 let lastAnimated=null;
@@ -815,6 +839,7 @@ updateNext();setInterval(updateNext,30000);
 const toast=document.createElement("div");toast.className="toast";toast.setAttribute("role","status");toast.innerHTML='<span id="toast-t"></span><button type="button" id="toast-b">查看</button>';document.body.appendChild(toast);
 let toastTimer;function notify(r){$("#toast-t").textContent="新的"+(KIND[r.kind]||"報告")+"送達："+r.date;toast.classList.add("on");$("#toast-b").onclick=()=>{toast.classList.remove("on");location.hash="r-"+r.id};clearTimeout(toastTimer);toastTimer=setTimeout(()=>toast.classList.remove("on"),9000)}
 
+document.getElementById("report-date").onchange=e=>{state.date=e.target.value;renderAll()};
 function setPressed(sel,attr,val){document.querySelectorAll(sel).forEach(x=>x.setAttribute("aria-pressed",x.dataset[attr]===val?"true":"false"))}
 document.querySelectorAll("[data-k]").forEach(b=>b.addEventListener("click",()=>{state.filter=b.dataset.k;setPressed("[data-k]","k",state.filter);try{localStorage.setItem("filter",state.filter)}catch(e){}if(location.hash)history.replaceState(null,"",location.pathname+location.search);renderAll()}));
 try{const f=localStorage.getItem("filter");if(f==="all"||KIND[f]){state.filter=f;setPressed("[data-k]","k",f)}}catch(e){}

@@ -36,7 +36,7 @@ def candles():
     k = closed(k, now)
     if not k:
         raise ValueError('沒有已收盤 K 線')
-    return {"tf": "4h", "src": "Binance BTCUSDT 現貨（data-api.binance.vision）", "lastOpen": False,
+    return {"tf": "4h", "src": "Binance BTCUSDT 現貨（data-api.binance.vision）", "lastOpen": False,"asOf":stamp(k[-1][6]),
             "t": [x[0] for x in k], "o": [float(x[1]) for x in k], "h": [float(x[2]) for x in k],
             "l": [float(x[3]) for x in k], "c": [float(x[4]) for x in k], "v": [round(float(x[5]), 1) for x in k]}
  
@@ -57,19 +57,37 @@ def fear_greed():
     day = datetime.datetime.fromtimestamp(int(d[0]["timestamp"]), datetime.timezone.utc).strftime("%Y-%m-%d")
     return {"value": int(d[0]["value"]), "prev": int(d[1]["value"]), "label": lab.get(d[0]["value_classification"], d[0]["value_classification"]), "date": day, "src": "alternative.me"}
  
-def funding():
-    f = lambda inst: round(float(get(f"https://www.okx.com/api/v5/public/funding-rate?instId={inst}")["data"][0]["fundingRate"]) * 100, 4)
-    return {"btc": f("BTC-USDT-SWAP"), "eth": f("ETH-USDT-SWAP"), "src": "OKX 永續（每 8 小時）"}
- 
+def stamp(ms):
+    return datetime.datetime.fromtimestamp(int(ms)/1000,TPE).isoformat(timespec="seconds")
+
+def funding(errors):
+    result={"src":"OKX USDT 永續，按實際週期換算每 8h 百分比","asOf":{}}
+    for coin in ("BTC","ETH"):
+        def rate():
+            row=get(f"https://www.okx.com/api/v5/public/funding-rate?instId={coin}-USDT-SWAP")["data"][0]
+            hours=(int(row["nextFundingTime"])-int(row["fundingTime"]))/3600000
+            if hours<=0: raise ValueError("結算週期無效")
+            result["asOf"][coin.lower()]=stamp(row["ts"])
+            return round(float(row["fundingRate"])*100*8/hours,6)
+        result[coin.lower()]=safe(rate,errors,"funding."+coin)
+    return result if any(result[k] is not None for k in ("btc","eth")) else None
+
 def oi():
     d = get("https://www.okx.com/api/v5/public/open-interest?instType=SWAP&instId=BTC-USDT-SWAP")["data"][0]
-    return {"btcUsdBn": round(float(d["oiUsd"]) / 1e9, 3), "src": "OKX BTC-USDT 永續"}
+    return {"btcUsdBn": round(float(d["oiUsd"]) / 1e9, 3), "asOf":stamp(d["ts"]), "src": "OKX BTC-USDT 永續"}
  
-def long_short():
-    d = get("https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy=BTC&period=1H")["data"][0]
-    r = float(d[1])
-    return {"btc": round(r / (1 + r) * 100, 1), "ratio": r, "src": "OKX 帳戶多空比（1 小時）"}
- 
+def long_short(errors):
+    out={"src":"OKX 帳戶多空比（1 小時）","asOf":{}}
+    for coin in ("BTC","ETH"):
+        def ratio():
+            ts,value,*_=get(f"https://www.okx.com/api/v5/rubik/stat/contracts/long-short-account-ratio?ccy={coin}&period=1H")["data"][0]
+            r=float(value)
+            out["asOf"][coin.lower()]=stamp(ts)
+            if coin=="BTC": out["ratio"]=r
+            return round(r/(1+r)*100,2)
+        out[coin.lower()]=safe(ratio,errors,"longShort."+coin)
+    return out if any(out[k] is not None for k in ("btc","eth")) else None
+
 # ---------- 合約數據（多所 OI、OKX 清算、OKX 主動買賣量） ----------
 COINS = ["BTC", "ETH", "SOL"]
 H_MS = 3600_000
@@ -194,9 +212,9 @@ def main():
         "prices": safe(prices, errors, "prices"),
         "candles": safe(candles, errors, "candles"),
         "fearGreed": safe(fear_greed, errors, "fearGreed"),
-        "funding": safe(funding, errors, "funding"),
+        "funding": funding(errors),
         "oi": safe(oi, errors, "oi"),
-        "longShort": safe(long_short, errors, "longShort"),
+        "longShort": long_short(errors),
         "deriv": safe(lambda: deriv(errors), errors, "deriv"),
         "errors": errors,
     }

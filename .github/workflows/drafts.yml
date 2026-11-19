@@ -1,0 +1,36 @@
+name: 早晚報數據草稿
+on:
+  schedule:
+    - cron: '55 23 * * *'
+    - cron: '52 12 * * *'
+  workflow_dispatch:
+    inputs:
+      kind:
+        type: choice
+        options: [morning, evening]
+        default: morning
+permissions:
+  contents: read
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install -r requirements.txt
+      - run: python -m fetch.live data/live.json
+      - name: 更新殖利率，失敗時保留原始資料日期
+        run: python -m fetch.treasury
+        continue-on-error: true
+      - run: python -m fetch.headlines
+      - env:
+          KIND: ${{ inputs.kind || (github.event.schedule == '55 23 * * *' && 'morning' || 'evening') }}
+        run: python -m report.build --kind "$KIND"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: editorial-draft
+          path: .drafts/*.json
+          include-hidden-files: true
+

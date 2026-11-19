@@ -1,0 +1,300 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "date",
+    "kind",
+    "title",
+    "headline",
+    "markdown",
+    "updatedAt",
+    "sortKey",
+    "metrics"
+  ],
+  "properties": {
+    "date": {
+      "format": "date",
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "morning",
+        "evening"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "headline": {
+      "type": "string",
+      "minLength": 1
+    },
+    "markdown": {
+      "type": "string",
+      "minLength": 1
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time",
+      "pattern": "\\+08:00$"
+    },
+    "sortKey": {
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}-[12]$"
+    },
+    "metrics": {
+      "type": "object",
+      "required": [
+        "trend",
+        "stance",
+        "action",
+        "qqqSwitch",
+        "dataQuality"
+      ],
+      "properties": {
+        "trend": {
+          "enum": [
+            null,
+            "多頭趨勢",
+            "空頭趨勢",
+            "盤整"
+          ]
+        },
+        "stance": {
+          "enum": [
+            null,
+            "偏多",
+            "偏空",
+            "觀望",
+            "減碼"
+          ]
+        },
+        "action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "qqqSwitch": {
+          "enum": [
+            null,
+            "開",
+            "關"
+          ]
+        },
+        "fearGreed": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "longShort": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "yields": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "etf": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "funding": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "oi": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "macro": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "earnings": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "breakoutAlt": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "liquidations24h": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "candles": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "indicators": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "klineStory": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "levels": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "stockPlans": {
+          "type": "array"
+        },
+        "stocks": {
+          "type": "array"
+        },
+        "indices": {
+          "type": "array"
+        },
+        "checks": {
+          "type": "array"
+        },
+        "events": {
+          "type": "array"
+        },
+        "cryptoStocks": {
+          "type": "array"
+        },
+        "causal": {
+          "type": "array"
+        },
+        "prices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "sym",
+              "price"
+            ],
+            "properties": {
+              "price": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "chg24h": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            }
+          }
+        },
+        "scenarios": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "side",
+              "entry",
+              "stop",
+              "t1",
+              "t2",
+              "rr1",
+              "rr2",
+              "halfSize",
+              "trigger",
+              "invalid",
+              "liqPrice",
+              "pnlStop",
+              "pnlT1",
+              "pnlT2"
+            ],
+            "properties": {
+              "side": {
+                "enum": [
+                  "long",
+                  "short"
+                ]
+              },
+              "entry": {
+                "type": "number"
+              },
+              "stop": {
+                "type": "number"
+              },
+              "t1": {
+                "type": "number"
+              },
+              "t2": {
+                "type": "number"
+              },
+              "rr1": {
+                "type": "number"
+              },
+              "rr2": {
+                "type": "number"
+              },
+              "liqPrice": {
+                "type": "number"
+              },
+              "pnlStop": {
+                "type": "number"
+              },
+              "pnlT1": {
+                "type": "number"
+              },
+              "pnlT2": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "dataQuality": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "field",
+              "status",
+              "note"
+            ],
+            "properties": {
+              "status": {
+                "enum": [
+                  "ok",
+                  "stale",
+                  "missing",
+                  "partial"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
